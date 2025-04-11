@@ -19,17 +19,7 @@ public class DummyDispatcher implements Dispatcher {
             if (!state.getAmbulanceCenters().isEmpty()) {
                 InterventionCenterModel center = state.getAmbulanceCenters().get(0);
 
-                DispatchModel dispatch = new DispatchModel();
-                dispatch.setSourceCounty(center.getCounty());
-                dispatch.setSourceCity(center.getCity());
-                dispatch.setTargetCounty(request.getCounty());
-                dispatch.setTargetCity(request.getCity());
-
-                int q = Math.min(request.getRequests().get(0).getQuantity(), center.getQuantity());
-                dispatch.setQuantity(q);
-                response.getDispatches().add(dispatch);
-                response.getRequests().add(request);
-                response.getCenters().add(center);
+                DispatchModel dispatch = response.dispatch(request, center);
 
                 System.out.println(dispatch);
             }

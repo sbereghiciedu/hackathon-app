@@ -22,6 +22,24 @@ public interface Dispatcher {
             centers = new ArrayList<>();
         }
 
+        public DispatchModel dispatch(RequestModel request, InterventionCenterModel center) {
+            DispatchModel dispatch = new DispatchModel();
+
+            dispatch.setSourceCounty(center.getCounty());
+            dispatch.setSourceCity(center.getCity());
+            dispatch.setTargetCounty(request.getCounty());
+            dispatch.setTargetCity(request.getCity());
+
+            int q = Math.min(request.getRequests().get(0).getQuantity(), center.getQuantity());
+            dispatch.setQuantity(q);
+
+            dispatches.add(dispatch);
+            requests.add(request);
+            centers.add(center);
+
+            return dispatch;
+        }
+
         public List<DispatchModel> getDispatches() {
             return dispatches;
         }
