@@ -55,7 +55,7 @@ public class RequestModel {
     public RequestDetail getRequest(String type) {
         RequestDetail result = null;
         for (RequestDetail request : requests) {
-            if (request.getType().equals(type)) {
+            if (request.getType().equalsIgnoreCase(type)) {
                 result = request;
                 break;
             }

@@ -20,6 +20,9 @@ public class Simulator implements Runnable {
     }
 
     public void run() {
+    }
+
+    public void run(String type) {
         State state = new State();
 
         state.getAmbulanceCenters().addAll(api.getMedicalSearch());

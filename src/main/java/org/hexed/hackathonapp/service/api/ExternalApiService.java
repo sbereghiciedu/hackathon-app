@@ -1,5 +1,6 @@
 package org.hexed.hackathonapp.service.api;
 
+import org.hexed.hackathonapp.model.api.calls.RequestType;
 import org.hexed.hackathonapp.model.api.exceptions.CallLimitException;
 import org.hexed.hackathonapp.model.api.exceptions.NoMoreCallsException;
 import org.hexed.hackathonapp.model.api.medical.InterventionCenterModel;
@@ -77,17 +78,17 @@ public class ExternalApiService {
     }
 
     // MEDICAL
-    public List<InterventionCenterModel> getMedicalSearch() {
+    public List<InterventionCenterModel> getRequestSearch(RequestType type) {
         ParameterizedTypeReference<List<InterventionCenterModel>> typeReference = new ParameterizedTypeReference<>() {
         };
         return webClient.get()
-                .uri("/medical/search")
+                .uri("/"+ type.getKey() + "/search")
                 .retrieve()
                 .bodyToMono(typeReference).block();
     }
 
-    public Integer getMedicalSearchByCity(String county, String city) {
-        String uri = String.format("/medical/searchbycity?county=%s&city=%s", county, city);
+    public Integer getMedicalSearchByCity(RequestType type, String county, String city) {
+        String uri = String.format("/" + type.getKey() + "/searchbycity?county=%s&city=%s", county, city);
         return webClient.get()
                 .uri(uri)
                 .retrieve()
