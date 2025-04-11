@@ -1,7 +1,12 @@
 package org.hexed.hackathonapp.engine;
 
 import org.hexed.hackathonapp.model.api.calls.CallsNextResponseModel;
+import org.hexed.hackathonapp.model.api.exceptions.CallLimitException;
+import org.hexed.hackathonapp.model.api.exceptions.NoMoreCallsException;
+import org.hexed.hackathonapp.model.api.medical.DispatchModel;
 import org.hexed.hackathonapp.service.api.ExternalApiService;
+
+import java.util.List;
 
 public class Simulator implements Runnable {
 
@@ -16,8 +21,26 @@ public class Simulator implements Runnable {
     public void run() {
         State state = new State();
 
-        CallsNextResponseModel req = api.getCallsNext();
-        state.getRequests().add(req);
+        boolean stillPlaying = true;
+        while (stillPlaying) {
+            CallsNextResponseModel req = null;
+            do {
+                try {
+                    req = api.getCallsNext();
+                    state.getRequests().add(req);
+                } catch (CallLimitException e) {
+                    // nothing to do, exit the loop smoothly
+                } catch (NoMoreCallsException e) {
+                    stillPlaying = false;
+                }
 
+            } while (req != null);
+
+            List<DispatchModel> dispatches = dispatcher.dispatch(state);
+
+            for (DispatchModel dispatch : dispatches) {
+                api.postMedicalDispatch(dispatch);
+            }
+        }
     }
 }
