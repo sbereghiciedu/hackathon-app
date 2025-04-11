@@ -1,11 +1,11 @@
 package org.hexed.hackathonapp.controller;
 
-import org.hexed.hackathonapp.model.api.calls.CallsNextResponseModel;
+import org.hexed.hackathonapp.model.api.calls.RequestModel;
 import org.hexed.hackathonapp.model.api.control.ControlResponseModel;
 import org.hexed.hackathonapp.model.api.control.ResetParamsModel;
 import org.hexed.hackathonapp.model.api.location.LocationModel;
 import org.hexed.hackathonapp.model.api.medical.DispatchModel;
-import org.hexed.hackathonapp.model.api.medical.LocationWithQuantityModel;
+import org.hexed.hackathonapp.model.api.medical.InterventionCenterModel;
 import org.hexed.hackathonapp.service.api.ExternalApiService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,17 +37,17 @@ public class T0Controller {
         ControlResponseModel controlStatus = api.getControlStatus();
         ControlResponseModel controlResetStatus = api.postControlReset(new ResetParamsModel("test", 1000, 5));
 
-        CallsNextResponseModel dest = api.getCallsNext();
-        List<CallsNextResponseModel> callsQueue = api.getCallsQueue();
+        RequestModel dest = api.getCallsNext();
+        List<RequestModel> callsQueue = api.getCallsQueue();
 
         List<LocationModel> locations = api.getLocations();
         for(LocationModel location : locations) {
             ps.println(location);
         }
 
-        List<LocationWithQuantityModel> medicalSearch = api.getMedicalSearch();
+        List<InterventionCenterModel> medicalSearch = api.getMedicalSearch();
 
-        LocationWithQuantityModel source = medicalSearch.getFirst();
+        InterventionCenterModel source = medicalSearch.getFirst();
         Integer available = api.getMedicalSearchByCity(source.getCounty(), source.getCity());
 
         assert available == source.getQuantity();

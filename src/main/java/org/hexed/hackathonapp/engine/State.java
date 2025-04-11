@@ -1,17 +1,17 @@
 package org.hexed.hackathonapp.engine;
 
-import org.hexed.hackathonapp.model.api.calls.CallsNextResponseModel;
-import org.hexed.hackathonapp.model.api.medical.LocationWithQuantityModel;
+import org.hexed.hackathonapp.model.api.calls.RequestModel;
+import org.hexed.hackathonapp.model.api.medical.InterventionCenterModel;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class State {
 
-    private List<CallsNextResponseModel> requests;
-    private List<LocationWithQuantityModel> ambulanceCenters;
-    private List<LocationWithQuantityModel> fireTrucks;
-    private List<LocationWithQuantityModel> policeCars;
+    private List<RequestModel> requests;
+    private List<InterventionCenterModel> ambulanceCenters;
+    private List<InterventionCenterModel> fireTrucks;
+    private List<InterventionCenterModel> policeCars;
 
     public State() {
         requests = new ArrayList<>();
@@ -20,19 +20,19 @@ public class State {
         policeCars = new ArrayList<>();
     }
 
-    public List<CallsNextResponseModel> getRequests() {
+    public List<RequestModel> getRequests() {
         return requests;
     }
 
-    public List<LocationWithQuantityModel> getAmbulanceCenters() {
+    public List<InterventionCenterModel> getAmbulanceCenters() {
         return ambulanceCenters;
     }
 
-    public List<LocationWithQuantityModel> getFireTrucks() {
+    public List<InterventionCenterModel> getFireTrucks() {
         return fireTrucks;
     }
 
-    public List<LocationWithQuantityModel> getPoliceCars() {
+    public List<InterventionCenterModel> getPoliceCars() {
         return policeCars;
     }
 }

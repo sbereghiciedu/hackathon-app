@@ -2,7 +2,7 @@ package org.hexed.hackathonapp.model.api.calls;
 
 import java.util.List;
 
-public class CallsNextResponseModel {
+public class RequestModel {
     private String city;
     private String county;
     private double latitude;

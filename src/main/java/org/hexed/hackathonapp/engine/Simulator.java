@@ -1,9 +1,10 @@
 package org.hexed.hackathonapp.engine;
 
-import org.hexed.hackathonapp.model.api.calls.CallsNextResponseModel;
+import org.hexed.hackathonapp.model.api.calls.RequestModel;
 import org.hexed.hackathonapp.model.api.exceptions.CallLimitException;
 import org.hexed.hackathonapp.model.api.exceptions.NoMoreCallsException;
 import org.hexed.hackathonapp.model.api.medical.DispatchModel;
+import org.hexed.hackathonapp.model.api.medical.InterventionCenterModel;
 import org.hexed.hackathonapp.service.api.ExternalApiService;
 
 import java.util.List;
@@ -25,7 +26,7 @@ public class Simulator implements Runnable {
 
         boolean stillPlaying = true;
         while (stillPlaying) {
-            CallsNextResponseModel req;
+            RequestModel req;
             do {
                 req = null;
                 try {
@@ -39,14 +40,28 @@ public class Simulator implements Runnable {
 
             } while (req != null);
 
-            List<DispatchModel> dispatches = dispatcher.dispatch(state);
-            if (dispatches.isEmpty()) {
-                stillPlaying = false;
-            }
+            Dispatcher.DispatchResponse response = dispatcher.dispatch(state);
 
-            for (DispatchModel dispatch : dispatches) {
+            if (response.getDispatches().isEmpty()) {
+                stillPlaying = false;
+            } else for (int i = 0; i < response.getDispatches().size(); i++) {
+                DispatchModel dispatch = response.getDispatches().get(0);
+                RequestModel request = response.getRequests().get(i);
+                InterventionCenterModel center = response.getCenters().get(i);
+
+                request.getRequests().get(0).setQuantity(request.getRequests().get(0).getQuantity() - dispatch.getQuantity());
+                if (request.getRequests().get(0).getQuantity() == 0) {
+                    state.getRequests().remove(request);
+                }
+
+                center.setQuantity(center.getQuantity() - dispatch.getQuantity());
+                if (center.getQuantity() == 0) {
+                    state.getAmbulanceCenters().remove(center);
+                }
+
                 api.postMedicalDispatch(dispatch);
             }
+
         }
     }
 }

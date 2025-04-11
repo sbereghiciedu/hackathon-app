@@ -1,10 +1,9 @@
 package org.hexed.hackathonapp.service.api;
 
-import org.apache.coyote.BadRequestException;
 import org.hexed.hackathonapp.model.api.exceptions.CallLimitException;
 import org.hexed.hackathonapp.model.api.exceptions.NoMoreCallsException;
-import org.hexed.hackathonapp.model.api.medical.LocationWithQuantityModel;
-import org.hexed.hackathonapp.model.api.calls.CallsNextResponseModel;
+import org.hexed.hackathonapp.model.api.medical.InterventionCenterModel;
+import org.hexed.hackathonapp.model.api.calls.RequestModel;
 import org.hexed.hackathonapp.model.api.control.ControlResponseModel;
 import org.hexed.hackathonapp.model.api.location.LocationModel;
 import org.hexed.hackathonapp.model.api.control.ResetParamsModel;
@@ -22,9 +21,6 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Map;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-
 @Service
 public class ExternalApiService {
 
@@ -37,12 +33,12 @@ public class ExternalApiService {
                 .build();
     }
 
-    public CallsNextResponseModel getCallsNext() {
+    public RequestModel getCallsNext() {
         return webClient.get()
                 .uri("/calls/next")
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, this::handle4xxError) // Handle 4xx errors
-                .bodyToMono(CallsNextResponseModel.class)
+                .bodyToMono(RequestModel.class)
                 .block(); // Block to fetch the result synchronously
     }
 
@@ -61,8 +57,8 @@ public class ExternalApiService {
                 });
     }
 
-    public List<CallsNextResponseModel> getCallsQueue() {
-        ParameterizedTypeReference<List<CallsNextResponseModel>> typeReference = new ParameterizedTypeReference<>() {
+    public List<RequestModel> getCallsQueue() {
+        ParameterizedTypeReference<List<RequestModel>> typeReference = new ParameterizedTypeReference<>() {
         };
         return webClient.get()
                 .uri("/calls/queue")
@@ -81,8 +77,8 @@ public class ExternalApiService {
     }
 
     // MEDICAL
-    public List<LocationWithQuantityModel> getMedicalSearch() {
-        ParameterizedTypeReference<List<LocationWithQuantityModel>> typeReference = new ParameterizedTypeReference<>() {
+    public List<InterventionCenterModel> getMedicalSearch() {
+        ParameterizedTypeReference<List<InterventionCenterModel>> typeReference = new ParameterizedTypeReference<>() {
         };
         return webClient.get()
                 .uri("/medical/search")

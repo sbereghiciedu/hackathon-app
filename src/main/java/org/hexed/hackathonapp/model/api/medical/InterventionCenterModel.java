@@ -1,6 +1,6 @@
 package org.hexed.hackathonapp.model.api.medical;
 
-public class LocationWithQuantityModel {
+public class InterventionCenterModel {
 
     private String county;
     private String city;
@@ -10,10 +10,10 @@ public class LocationWithQuantityModel {
 
     // Constructors, getters, and setters
 
-    public LocationWithQuantityModel() {
+    public InterventionCenterModel() {
     }
 
-    public LocationWithQuantityModel(String county, String city, double latitude, double longitude, int quantity) {
+    public InterventionCenterModel(String county, String city, double latitude, double longitude, int quantity) {
         this.county = county;
         this.city = city;
         this.latitude = latitude;
