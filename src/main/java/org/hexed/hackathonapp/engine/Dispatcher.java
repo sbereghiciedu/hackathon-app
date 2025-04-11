@@ -1,6 +1,5 @@
 package org.hexed.hackathonapp.engine;
 
-import org.hexed.hackathonapp.model.api.calls.RequestModel;
 import org.hexed.hackathonapp.model.api.calls.RequestType;
 import org.hexed.hackathonapp.model.api.interventioncenter.DispatchModel;
 import org.hexed.hackathonapp.model.api.interventioncenter.InterventionCenterModel;
@@ -13,9 +12,9 @@ public interface Dispatcher {
     DispatchResponse dispatch(State state, RequestType type);
 
     class DispatchResponse {
-        private List<DispatchModel> dispatches;
-        private List<RequestModel> requests;
-        private List<InterventionCenterModel> centers;
+        private final List<DispatchModel> dispatches;
+        private final List<State.Request> requests;
+        private final List<InterventionCenterModel> centers;
 
         public DispatchResponse() {
             dispatches = new ArrayList<>();
@@ -23,7 +22,7 @@ public interface Dispatcher {
             centers = new ArrayList<>();
         }
 
-        public DispatchModel dispatch(RequestType type, RequestModel request, InterventionCenterModel center) {
+        public DispatchModel dispatch(State.Request request, InterventionCenterModel center) {
             DispatchModel dispatch = new DispatchModel();
 
             dispatch.setSourceCounty(center.getCounty());
@@ -31,7 +30,7 @@ public interface Dispatcher {
             dispatch.setTargetCounty(request.getCounty());
             dispatch.setTargetCity(request.getCity());
 
-            int q = Math.min(request.getRequest(type).getQuantity(), center.getQuantity());
+            int q = Math.min(request.getQ(), center.getQuantity());
             dispatch.setQuantity(q);
 
             dispatches.add(dispatch);
@@ -45,24 +44,12 @@ public interface Dispatcher {
             return dispatches;
         }
 
-        public void setDispatches(List<DispatchModel> dispatches) {
-            this.dispatches = dispatches;
-        }
-
-        public List<RequestModel> getRequests() {
+        public List<State.Request> getRequests() {
             return requests;
-        }
-
-        public void setRequests(List<RequestModel> requests) {
-            this.requests = requests;
         }
 
         public List<InterventionCenterModel> getCenters() {
             return centers;
-        }
-
-        public void setCenters(List<InterventionCenterModel> centers) {
-            this.centers = centers;
         }
     }
 }

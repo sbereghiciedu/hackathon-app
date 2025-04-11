@@ -11,19 +11,19 @@ public class DummyDispatcher implements Dispatcher {
     public DispatchResponse dispatch(State state, RequestType type) {
         DispatchResponse response = new DispatchResponse();
 
-        RequestModel request = null;
+        State.Request request = null;
         int i = 0;
-        while (request == null && i < state.getRequests().size()) {
-            if (state.getRequests().get(i).getRequest(type).getQuantity() > 0) {
-                request = state.getRequests().get(i);
+        while (request == null && i < state.getRequests().get(type).size()) {
+            if (state.getRequests().get(type).get(i).getQ() > 0) {
+                request = state.getRequests().get(type).get(i);
             } else {
                 i++;
             }
         }
-        if (request != null && !state.getInterventionCenters(type).isEmpty()) {
-            InterventionCenterModel center = state.getInterventionCenters(type).getFirst();
+        if (request != null && !state.getInterventionCenters().get(type).isEmpty()) {
+            InterventionCenterModel center = state.getInterventionCenters().get(type).getFirst();
 
-            DispatchModel dispatch = response.dispatch(type, request, center);
+            DispatchModel dispatch = response.dispatch(request, center);
 
             System.out.println(dispatch);
         }

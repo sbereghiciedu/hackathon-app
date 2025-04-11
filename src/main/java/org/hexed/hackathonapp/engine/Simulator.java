@@ -7,7 +7,10 @@ import org.hexed.hackathonapp.model.api.exceptions.CallLimitException;
 import org.hexed.hackathonapp.model.api.exceptions.NoMoreCallsException;
 import org.hexed.hackathonapp.model.api.interventioncenter.DispatchModel;
 import org.hexed.hackathonapp.model.api.interventioncenter.InterventionCenterModel;
+import org.hexed.hackathonapp.model.api.location.LocationModel;
 import org.hexed.hackathonapp.service.api.ExternalApiService;
+
+import java.util.List;
 
 public class Simulator implements Runnable {
 
@@ -19,23 +22,40 @@ public class Simulator implements Runnable {
         this.dispatcher = dispatcher;
     }
 
-    public void run() {
-        run(RequestType.MEDICAL);
+    protected void populateInterventionCentersV0(State state) {
+        for (RequestType type : RequestType.values()) {
+            state.getInterventionCenters().get(type).addAll(api.getInterventionCenters(type));
+        }
     }
 
-    public void run(RequestType type) {
-        State state = new State();
+    protected void populateInterventionCentersV1(State state) {
+        List<LocationModel> locations = api.getLocations();
+        for (LocationModel location : locations) {
+            for (RequestType type : RequestType.values()) {
+                int available = api.getInterventionCentersByCity(type, location.getCounty(), location.getName());
+                if (available > 0) {
+                    InterventionCenterModel icm = new InterventionCenterModel(location.getCounty(), location.getName(), location.getLatitude(), location.getLongitude(), available);
+                    state.getInterventionCenters().get(type).add(icm);
+                }
+            }
+        }
+    }
 
-        state.getInterventionCenters(type).addAll(api.getInterventionCenters(type));
+    public void run() {
+        State state = new State();
+        populateInterventionCentersV0(state);
 
         boolean stillPlaying = true;
+
+        // TODO
+        RequestType type = RequestType.MEDICAL;
         while (stillPlaying) {
             RequestModel req;
             do {
                 req = null;
                 try {
                     req = api.getCallsNext();
-                    state.getRequests().add(req);
+                    state.addRequest(req);
                 } catch (CallLimitException e) {
                     // nothing to do, exit the loop smoothly
                 } catch (NoMoreCallsException e) {
@@ -50,19 +70,17 @@ public class Simulator implements Runnable {
                 stillPlaying = false;
             } else for (int i = 0; i < response.getDispatches().size(); i++) {
                 DispatchModel dispatch = response.getDispatches().get(i);
-                RequestModel request = response.getRequests().get(i);
+                State.Request request = response.getRequests().get(i);
                 InterventionCenterModel center = response.getCenters().get(i);
 
-                RequestDetail requestDetail = request.getRequest(type);
-                requestDetail.setQuantity(requestDetail.getQuantity() - dispatch.getQuantity());
-                // TODO check this, when to remove request
-//                if (request.getRequests().get(0).getQuantity() == 0) {
-//                    state.getRequests().remove(request);
-//                }
+                request.setQ(request.getQ() - dispatch.getQuantity());
+                if (request.getQ() == 0) {
+                    state.getRequests().get(type).remove(request);
+                }
 
                 center.setQuantity(center.getQuantity() - dispatch.getQuantity());
                 if (center.getQuantity() == 0) {
-                    state.getInterventionCenters(type).remove(center);
+                    state.getInterventionCenters().get(type).remove(center);
                 }
 
                 api.postDispatch(type, dispatch);
