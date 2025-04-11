@@ -1,5 +1,8 @@
 package org.hexed.hackathonapp.service.api;
 
+import org.apache.coyote.BadRequestException;
+import org.hexed.hackathonapp.model.api.exceptions.CallLimitException;
+import org.hexed.hackathonapp.model.api.exceptions.NoMoreCallsException;
 import org.hexed.hackathonapp.model.api.medical.LocationWithQuantityModel;
 import org.hexed.hackathonapp.model.api.calls.CallsNextResponseModel;
 import org.hexed.hackathonapp.model.api.control.ControlResponseModel;
@@ -19,6 +22,9 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Map;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
 @Service
 public class ExternalApiService {
 
@@ -32,31 +38,28 @@ public class ExternalApiService {
     }
 
     public CallsNextResponseModel getCallsNext() {
-        try {
-            return webClient.get()
-                    .uri("/calls/next")
-                    .retrieve()
-                    .onStatus(HttpStatusCode::is4xxClientError, this::handle4xxError)
-                    .bodyToMono(CallsNextResponseModel.class)
-                    .block(); // Block to fetch the result synchronously
-        } catch (Exception e) {
-            // Log the exception and return null as a fallback
-            System.err.println("[Exception] Failed to retrieve /calls/next: " + e.getMessage());
-            return null;
-        }
+        return webClient.get()
+                .uri("/calls/next")
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, this::handle4xxError) // Handle 4xx errors
+                .bodyToMono(CallsNextResponseModel.class)
+                .block(); // Block to fetch the result synchronously
     }
 
     private Mono<Throwable> handle4xxError(ClientResponse response) {
-        if (response.statusCode() == HttpStatus.BAD_REQUEST) {
-            // Handle and log 400-specific errors
-            return response.bodyToMono(String.class)
-                    .doOnNext(errorBody -> System.err.println("[Error] 400 Bad Request: " + errorBody))
-                    .then(Mono.error(new RuntimeException("Received 400 Bad Request")));
-        }
-        // Handle other 4xx errors
-        return Mono.error(new RuntimeException("4xx client error occurred: " + response.statusCode()));
+        return response.bodyToMono(String.class)
+                .flatMap(errorBody -> {
+                    HttpStatusCode status = response.statusCode();
+                    switch (status) {
+                        case BAD_REQUEST:
+                            return Mono.error(new CallLimitException("400 Bad Request: " + errorBody));
+                        case NOT_FOUND:
+                            return Mono.error(new NoMoreCallsException("404 Not Found: " + errorBody));
+                        default:
+                            return Mono.error(new RuntimeException("HTTP " + status + ": " + errorBody));
+                    }
+                });
     }
-
 
     public List<CallsNextResponseModel> getCallsQueue() {
         ParameterizedTypeReference<List<CallsNextResponseModel>> typeReference = new ParameterizedTypeReference<>() {
