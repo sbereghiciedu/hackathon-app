@@ -8,6 +8,7 @@ class HackathonAppApplicationTests {
 
 	@Test
 	void contextLoads() {
+
 	}
 
 }
