@@ -49,7 +49,7 @@ public class ExternalApiService {
     private Mono<Throwable> handle4xxError(ClientResponse response) {
         return response.bodyToMono(String.class)
                 .flatMap(errorBody -> {
-                    HttpStatusCode status = response.statusCode();
+                    HttpStatus status = (HttpStatus) response.statusCode();
                     switch (status) {
                         case BAD_REQUEST:
                             return Mono.error(new CallLimitException("400 Bad Request: " + errorBody));
