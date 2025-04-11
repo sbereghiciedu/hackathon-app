@@ -47,14 +47,11 @@ public class ExternalApiService {
         return response.bodyToMono(String.class)
                 .flatMap(errorBody -> {
                     HttpStatus status = (HttpStatus) response.statusCode();
-                    switch (status) {
-                        case BAD_REQUEST:
-                            return Mono.error(new CallLimitException("400 Bad Request: " + errorBody));
-                        case NOT_FOUND:
-                            return Mono.error(new NoMoreCallsException("404 Not Found: " + errorBody));
-                        default:
-                            return Mono.error(new RuntimeException("HTTP " + status + ": " + errorBody));
-                    }
+                    return switch (status) {
+                        case BAD_REQUEST -> Mono.error(new CallLimitException("400 Bad Request: " + errorBody));
+                        case NOT_FOUND -> Mono.error(new NoMoreCallsException("404 Not Found: " + errorBody));
+                        default -> Mono.error(new RuntimeException("HTTP " + status + ": " + errorBody));
+                    };
                 });
     }
 

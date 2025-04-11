@@ -21,9 +21,9 @@ public class DummyDispatcher implements Dispatcher {
             }
         }
         if (request != null && !state.getInterventionCenters(type).isEmpty()) {
-            InterventionCenterModel center = state.getInterventionCenters(type).get(0);
+            InterventionCenterModel center = state.getInterventionCenters(type).getFirst();
 
-            DispatchModel dispatch = response.dispatch(request, center);
+            DispatchModel dispatch = response.dispatch(type, request, center);
 
             System.out.println(dispatch);
         }

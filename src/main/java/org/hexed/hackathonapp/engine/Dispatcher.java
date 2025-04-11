@@ -10,9 +10,9 @@ import java.util.List;
 
 public interface Dispatcher {
 
-    public DispatchResponse dispatch(State state, RequestType type);
+    DispatchResponse dispatch(State state, RequestType type);
 
-    public static class DispatchResponse {
+    class DispatchResponse {
         private List<DispatchModel> dispatches;
         private List<RequestModel> requests;
         private List<InterventionCenterModel> centers;
@@ -23,7 +23,7 @@ public interface Dispatcher {
             centers = new ArrayList<>();
         }
 
-        public DispatchModel dispatch(RequestModel request, InterventionCenterModel center) {
+        public DispatchModel dispatch(RequestType type, RequestModel request, InterventionCenterModel center) {
             DispatchModel dispatch = new DispatchModel();
 
             dispatch.setSourceCounty(center.getCounty());
@@ -31,7 +31,7 @@ public interface Dispatcher {
             dispatch.setTargetCounty(request.getCounty());
             dispatch.setTargetCity(request.getCity());
 
-            int q = Math.min(request.getRequests().get(0).getQuantity(), center.getQuantity());
+            int q = Math.min(request.getRequest(type).getQuantity(), center.getQuantity());
             dispatch.setQuantity(q);
 
             dispatches.add(dispatch);

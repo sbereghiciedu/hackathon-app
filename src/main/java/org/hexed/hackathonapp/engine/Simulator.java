@@ -11,8 +11,8 @@ import org.hexed.hackathonapp.service.api.ExternalApiService;
 
 public class Simulator implements Runnable {
 
-    private ExternalApiService api;
-    private Dispatcher dispatcher;
+    private final ExternalApiService api;
+    private final Dispatcher dispatcher;
 
     public Simulator(ExternalApiService api, Dispatcher dispatcher) {
         this.api = api;

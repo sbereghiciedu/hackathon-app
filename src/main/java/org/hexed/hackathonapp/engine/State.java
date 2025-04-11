@@ -11,8 +11,8 @@ import java.util.Map;
 
 public class State {
 
-    private List<RequestModel> requests;
-    private Map<RequestType, List<InterventionCenterModel>> interventionCenters;
+    private final List<RequestModel> requests;
+    private final Map<RequestType, List<InterventionCenterModel>> interventionCenters;
 
     public State() {
         requests = new ArrayList<>();
