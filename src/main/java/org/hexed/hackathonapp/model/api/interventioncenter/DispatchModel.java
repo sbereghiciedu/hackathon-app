@@ -1,4 +1,4 @@
-package org.hexed.hackathonapp.model.api.medical;
+package org.hexed.hackathonapp.model.api.interventioncenter;
 
 public class DispatchModel {
 

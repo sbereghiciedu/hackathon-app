@@ -3,12 +3,12 @@ package org.hexed.hackathonapp.service.api;
 import org.hexed.hackathonapp.model.api.calls.RequestType;
 import org.hexed.hackathonapp.model.api.exceptions.CallLimitException;
 import org.hexed.hackathonapp.model.api.exceptions.NoMoreCallsException;
-import org.hexed.hackathonapp.model.api.medical.InterventionCenterModel;
+import org.hexed.hackathonapp.model.api.interventioncenter.InterventionCenterModel;
 import org.hexed.hackathonapp.model.api.calls.RequestModel;
 import org.hexed.hackathonapp.model.api.control.ControlResponseModel;
 import org.hexed.hackathonapp.model.api.location.LocationModel;
 import org.hexed.hackathonapp.model.api.control.ResetParamsModel;
-import org.hexed.hackathonapp.model.api.medical.DispatchModel;
+import org.hexed.hackathonapp.model.api.interventioncenter.DispatchModel;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -77,8 +77,7 @@ public class ExternalApiService {
                 .bodyToMono(typeReference).block();
     }
 
-    // MEDICAL
-    public List<InterventionCenterModel> getRequestSearch(RequestType type) {
+    public List<InterventionCenterModel> getInterventionCenters(RequestType type) {
         ParameterizedTypeReference<List<InterventionCenterModel>> typeReference = new ParameterizedTypeReference<>() {
         };
         return webClient.get()
@@ -87,7 +86,7 @@ public class ExternalApiService {
                 .bodyToMono(typeReference).block();
     }
 
-    public Integer getMedicalSearchByCity(RequestType type, String county, String city) {
+    public Integer getInterventionCentersByCity(RequestType type, String county, String city) {
         String uri = String.format("/" + type.getKey() + "/searchbycity?county=%s&city=%s", county, city);
         return webClient.get()
                 .uri(uri)
@@ -95,9 +94,9 @@ public class ExternalApiService {
                 .bodyToMono(Integer.class).block();
     }
 
-    public String postMedicalDispatch(DispatchModel dispatchModel) {
+    public String postDispatch(RequestType type, DispatchModel dispatchModel) {
         return webClient.post()
-                .uri("/medical/dispatch")
+                .uri("/" + type.getKey() + "/dispatch")
                 .bodyValue(dispatchModel)
                 .retrieve()
                 .bodyToMono(String.class)

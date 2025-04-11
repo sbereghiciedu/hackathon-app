@@ -1,15 +1,16 @@
 package org.hexed.hackathonapp.engine;
 
 import org.hexed.hackathonapp.model.api.calls.RequestModel;
-import org.hexed.hackathonapp.model.api.medical.DispatchModel;
-import org.hexed.hackathonapp.model.api.medical.InterventionCenterModel;
+import org.hexed.hackathonapp.model.api.calls.RequestType;
+import org.hexed.hackathonapp.model.api.interventioncenter.DispatchModel;
+import org.hexed.hackathonapp.model.api.interventioncenter.InterventionCenterModel;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public interface Dispatcher {
 
-    public DispatchResponse dispatch(State state);
+    public DispatchResponse dispatch(State state, RequestType type);
 
     public static class DispatchResponse {
         private List<DispatchModel> dispatches;

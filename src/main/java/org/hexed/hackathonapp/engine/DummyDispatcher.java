@@ -1,28 +1,31 @@
 package org.hexed.hackathonapp.engine;
 
 import org.hexed.hackathonapp.model.api.calls.RequestModel;
-import org.hexed.hackathonapp.model.api.medical.DispatchModel;
-import org.hexed.hackathonapp.model.api.medical.InterventionCenterModel;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.hexed.hackathonapp.model.api.calls.RequestType;
+import org.hexed.hackathonapp.model.api.interventioncenter.DispatchModel;
+import org.hexed.hackathonapp.model.api.interventioncenter.InterventionCenterModel;
 
 public class DummyDispatcher implements Dispatcher {
 
     @Override
-    public DispatchResponse dispatch(State state) {
+    public DispatchResponse dispatch(State state, RequestType type) {
         DispatchResponse response = new DispatchResponse();
 
-        if (!state.getRequests().isEmpty()) {
-            RequestModel request = state.getRequests().get(0);
-
-            if (!state.getAmbulanceCenters().isEmpty()) {
-                InterventionCenterModel center = state.getAmbulanceCenters().get(0);
-
-                DispatchModel dispatch = response.dispatch(request, center);
-
-                System.out.println(dispatch);
+        RequestModel request = null;
+        int i = 0;
+        while (request == null && i < state.getRequests().size()) {
+            if (state.getRequests().get(i).getRequest(type).getQuantity() > 0) {
+                request = state.getRequests().get(i);
+            } else {
+                i++;
             }
+        }
+        if (request != null && !state.getInterventionCenters(type).isEmpty()) {
+            InterventionCenterModel center = state.getInterventionCenters(type).get(0);
+
+            DispatchModel dispatch = response.dispatch(request, center);
+
+            System.out.println(dispatch);
         }
 
         return response;

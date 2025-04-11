@@ -52,10 +52,10 @@ public class RequestModel {
         this.requests = requests;
     }
 
-    public RequestDetail getRequest(String type) {
+    public RequestDetail getRequest(RequestType type) {
         RequestDetail result = null;
         for (RequestDetail request : requests) {
-            if (request.getType().equalsIgnoreCase(type)) {
+            if (request.getType().equalsIgnoreCase(type.getKey())) {
                 result = request;
                 break;
             }

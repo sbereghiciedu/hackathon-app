@@ -17,5 +17,4 @@ public enum RequestType {
     RequestType(String key) {
         this.key = key;
     }
-
-    }
+}

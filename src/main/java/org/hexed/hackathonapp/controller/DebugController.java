@@ -1,11 +1,12 @@
 package org.hexed.hackathonapp.controller;
 
+import org.hexed.hackathonapp.model.api.calls.RequestType;
 import org.hexed.hackathonapp.model.api.location.LocationModel;
-import org.hexed.hackathonapp.model.api.medical.InterventionCenterModel;
+import org.hexed.hackathonapp.model.api.interventioncenter.InterventionCenterModel;
 import org.hexed.hackathonapp.model.api.calls.RequestModel;
 import org.hexed.hackathonapp.model.api.control.ControlResponseModel;
 import org.hexed.hackathonapp.model.api.control.ResetParamsModel;
-import org.hexed.hackathonapp.model.api.medical.DispatchModel;
+import org.hexed.hackathonapp.model.api.interventioncenter.DispatchModel;
 import org.hexed.hackathonapp.service.api.ExternalApiService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +37,14 @@ public class DebugController {
 
         List<LocationModel> locations = api.getLocations();
 
-        List<InterventionCenterModel> medicalSearch = api.getMedicalSearch();
+        List<InterventionCenterModel> medicalSearch = api.getInterventionCenters(RequestType.MEDICAL);
 
         InterventionCenterModel source = medicalSearch.getFirst();
-        Integer available = api.getMedicalSearchByCity(source.getCounty(), source.getCity());
+        Integer available = api.getInterventionCentersByCity(RequestType.MEDICAL, source.getCounty(), source.getCity());
 
         assert available == source.getQuantity();
 
-        String dispatch = api.postMedicalDispatch(new DispatchModel(source.getCounty(), source.getCity(),
+        String dispatch = api.postDispatch(RequestType.MEDICAL, new DispatchModel(source.getCounty(), source.getCity(),
                 dest.getCounty(), dest.getCity(), 1));
 
 
