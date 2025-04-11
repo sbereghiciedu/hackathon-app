@@ -9,13 +9,13 @@ import java.util.List;
 public class State {
 
     private List<CallsNextResponseModel> requests;
-    private List<LocationWithQuantityModel> ambulances;
+    private List<LocationWithQuantityModel> ambulanceCenters;
     private List<LocationWithQuantityModel> fireTrucks;
     private List<LocationWithQuantityModel> policeCars;
 
     public State() {
         requests = new ArrayList<>();
-        ambulances = new ArrayList<>();
+        ambulanceCenters = new ArrayList<>();
         fireTrucks = new ArrayList<>();
         policeCars = new ArrayList<>();
     }
@@ -24,8 +24,8 @@ public class State {
         return requests;
     }
 
-    public List<LocationWithQuantityModel> getAmbulances() {
-        return ambulances;
+    public List<LocationWithQuantityModel> getAmbulanceCenters() {
+        return ambulanceCenters;
     }
 
     public List<LocationWithQuantityModel> getFireTrucks() {

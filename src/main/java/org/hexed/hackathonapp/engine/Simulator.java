@@ -21,6 +21,8 @@ public class Simulator implements Runnable {
     public void run() {
         State state = new State();
 
+        state.getAmbulanceCenters().addAll(api.getMedicalSearch());
+
         boolean stillPlaying = true;
         while (stillPlaying) {
             CallsNextResponseModel req = null;
@@ -37,6 +39,9 @@ public class Simulator implements Runnable {
             } while (req != null);
 
             List<DispatchModel> dispatches = dispatcher.dispatch(state);
+            if (dispatches.size() == 0) {
+                stillPlaying = false;
+            }
 
             for (DispatchModel dispatch : dispatches) {
                 api.postMedicalDispatch(dispatch);

@@ -21,7 +21,7 @@ import java.util.List;
 @RequestMapping("/t0")
 public class T0Controller {
 
-    Logger logger = LoggerFactory.getLogger(DebugController.class);
+    Logger logger = LoggerFactory.getLogger(T0Controller.class);
 
     private final ExternalApiService api;
 
