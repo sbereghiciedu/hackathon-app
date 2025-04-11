@@ -8,9 +8,13 @@ import org.hexed.hackathonapp.model.api.control.ResetParamsModel;
 import org.hexed.hackathonapp.model.api.medical.DispatchModel;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
@@ -28,11 +32,31 @@ public class ExternalApiService {
     }
 
     public CallsNextResponseModel getCallsNext() {
-        return webClient.get()
-                .uri("/calls/next")
-                .retrieve()
-                .bodyToMono(CallsNextResponseModel.class).block();
+        try {
+            return webClient.get()
+                    .uri("/calls/next")
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is4xxClientError, this::handle4xxError)
+                    .bodyToMono(CallsNextResponseModel.class)
+                    .block(); // Block to fetch the result synchronously
+        } catch (Exception e) {
+            // Log the exception and return null as a fallback
+            System.err.println("[Exception] Failed to retrieve /calls/next: " + e.getMessage());
+            return null;
+        }
     }
+
+    private Mono<Throwable> handle4xxError(ClientResponse response) {
+        if (response.statusCode() == HttpStatus.BAD_REQUEST) {
+            // Handle and log 400-specific errors
+            return response.bodyToMono(String.class)
+                    .doOnNext(errorBody -> System.err.println("[Error] 400 Bad Request: " + errorBody))
+                    .then(Mono.error(new RuntimeException("Received 400 Bad Request")));
+        }
+        // Handle other 4xx errors
+        return Mono.error(new RuntimeException("4xx client error occurred: " + response.statusCode()));
+    }
+
 
     public List<CallsNextResponseModel> getCallsQueue() {
         ParameterizedTypeReference<List<CallsNextResponseModel>> typeReference = new ParameterizedTypeReference<>() {
@@ -83,8 +107,8 @@ public class ExternalApiService {
     // CONTROL
     public ControlResponseModel postControlReset(ResetParamsModel resetParamsModel) {
         return webClient.post()
-                .uri("/control/reset")
-                .bodyValue(resetParamsModel)
+                .uri("/control/reset?seed=%s&targetDispatches=%d&maxActiveCalls=%d".formatted(resetParamsModel.getSeed(), resetParamsModel.getTargetDispatches(), resetParamsModel.getMaxActiveCalls()))
+                .bodyValue(Map.of())
                 .retrieve()
                 .bodyToMono(ControlResponseModel.class)
                 .block();
