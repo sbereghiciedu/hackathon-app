@@ -25,8 +25,9 @@ public class Simulator implements Runnable {
 
         boolean stillPlaying = true;
         while (stillPlaying) {
-            CallsNextResponseModel req = null;
+            CallsNextResponseModel req;
             do {
+                req = null;
                 try {
                     req = api.getCallsNext();
                     state.getRequests().add(req);
@@ -39,7 +40,7 @@ public class Simulator implements Runnable {
             } while (req != null);
 
             List<DispatchModel> dispatches = dispatcher.dispatch(state);
-            if (dispatches.size() == 0) {
+            if (dispatches.isEmpty()) {
                 stillPlaying = false;
             }
 

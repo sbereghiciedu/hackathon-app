@@ -12,17 +12,22 @@ public class DummyDispatcher implements Dispatcher {
     @Override
     public List<DispatchModel> dispatch(State state) {
         List<DispatchModel> dispatches = new ArrayList<>();
-        if (state.getRequests().size() > 0) {
+        if (!state.getRequests().isEmpty()) {
             CallsNextResponseModel request = state.getRequests().get(0);
 
-            if (state.getAmbulanceCenters().size() > 0) {
+            if (!state.getAmbulanceCenters().isEmpty()) {
                 LocationWithQuantityModel ambulanceCenter = state.getAmbulanceCenters().get(0);
 
                 DispatchModel dispatch = new DispatchModel();
-                dispatches.add(dispatch);
-                System.out.println(dispatch);
+                dispatch.setSourceCounty(ambulanceCenter.getCounty());
+                dispatch.setSourceCity(ambulanceCenter.getCity());
+                dispatch.setTargetCounty(request.getCounty());
+                dispatch.setTargetCity(request.getCity());
 
                 int q = Math.min(request.getRequests().get(0).getQuantity(), ambulanceCenter.getQuantity());
+                dispatch.setQuantity(q);
+                dispatches.add(dispatch);
+                System.out.println(dispatch);
 
                 request.getRequests().get(0).setQuantity(request.getRequests().get(0).getQuantity() - q);
                 if (request.getRequests().get(0).getQuantity() == 0) {
