@@ -3,8 +3,26 @@ package org.hexed.hackathonapp.model.api.calls;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class RequestDetail {
+
+    public static final String TYPE_MEDICAL = "Medical";
+    public static final String TYPE_FIRE = "Fire";
+    public static final String TYPE_POLICE = "Police";
+    public static final String TYPE_RESCUE = "Rescue";
+    public static final String TYPE_UTILITY = "Utility";
+
+    @JsonProperty("Type")
+    private String type;
+
     @JsonProperty("Quantity")
     private int quantity;
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 
     public int getQuantity() {
         return quantity;

@@ -52,4 +52,16 @@ public class RequestModel {
         this.requests = requests;
     }
 
+    public RequestDetail getRequest(String type) {
+        RequestDetail result = null;
+        for (RequestDetail request : requests) {
+            if (request.getType().equals(type)) {
+                result = request;
+                break;
+            }
+        }
+        return result;
+    }
+
+
 }
