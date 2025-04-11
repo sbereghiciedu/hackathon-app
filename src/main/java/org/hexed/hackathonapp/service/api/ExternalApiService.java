@@ -25,6 +25,7 @@ import java.util.Map;
 @Service
 public class ExternalApiService {
 
+    private static final int MAX_RETRIES = 100;
     private final WebClient webClient;
 
     public ExternalApiService() {
@@ -35,12 +36,13 @@ public class ExternalApiService {
     }
 
     public RequestModel getCallsNext() {
-        return webClient.get()
+        return RetryUtils.retry(() -> webClient.get()
                 .uri("/calls/next")
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, this::handle4xxError) // Handle 4xx errors
                 .bodyToMono(RequestModel.class)
-                .block(); // Block to fetch the result synchronously
+                .block(),
+                MAX_RETRIES); // Block to fetch the result synchronously
     }
 
     private Mono<Throwable> handle4xxError(ClientResponse response) {
@@ -58,71 +60,80 @@ public class ExternalApiService {
     public List<RequestModel> getCallsQueue() {
         ParameterizedTypeReference<List<RequestModel>> typeReference = new ParameterizedTypeReference<>() {
         };
-        return webClient.get()
+        return RetryUtils.retry(() -> webClient.get()
                 .uri("/calls/queue")
                 .retrieve()
-                .bodyToMono(typeReference).block();
+                .bodyToMono(typeReference).block(),
+                MAX_RETRIES);
     }
 
     // LOCATIONS
     public List<LocationModel> getLocations() {
         ParameterizedTypeReference<List<LocationModel>> typeReference = new ParameterizedTypeReference<>() {
         };
-        return webClient.get()
+        return RetryUtils.retry(() -> webClient.get()
                 .uri("/locations")
                 .retrieve()
-                .bodyToMono(typeReference).block();
+                .bodyToMono(typeReference).block(),
+                MAX_RETRIES);
     }
 
     public List<InterventionCenterModel> getInterventionCenters(RequestType type) {
         ParameterizedTypeReference<List<InterventionCenterModel>> typeReference = new ParameterizedTypeReference<>() {
         };
-        return webClient.get()
+        return RetryUtils.retry(() -> webClient.get()
                 .uri("/"+ type.getKey() + "/search")
                 .retrieve()
-                .bodyToMono(typeReference).block();
+                .bodyToMono(typeReference).block(),
+                MAX_RETRIES);
     }
 
     public Integer getInterventionCentersByCity(RequestType type, String county, String city) {
         String uri = String.format("/" + type.getKey() + "/searchbycity?county=%s&city=%s", county, city);
-        return webClient.get()
+        return RetryUtils.retry(() -> webClient.get()
                 .uri(uri)
                 .retrieve()
-                .bodyToMono(Integer.class).block();
+                .bodyToMono(Integer.class).block(),
+                MAX_RETRIES);
     }
 
     public String postDispatch(RequestType type, DispatchModel dispatchModel) {
-        return webClient.post()
+        return RetryUtils.retry(() -> webClient.post()
                 .uri("/" + type.getKey() + "/dispatch")
                 .bodyValue(dispatchModel)
                 .retrieve()
                 .bodyToMono(String.class)
-                .block();
+                .block(),
+                MAX_RETRIES);
     }
 
     // CONTROL
     public ControlResponseModel postControlReset(ResetParamsModel resetParamsModel) {
-        return webClient.post()
+        return RetryUtils.retry(() -> webClient.post()
                 .uri("/control/reset?seed=%s&targetDispatches=%d&maxActiveCalls=%d".formatted(resetParamsModel.getSeed(), resetParamsModel.getTargetDispatches(), resetParamsModel.getMaxActiveCalls()))
                 .bodyValue(Map.of())
                 .retrieve()
                 .bodyToMono(ControlResponseModel.class)
-                .block();
+                .block(),
+                MAX_RETRIES);
     }
 
     public ControlResponseModel postControlStop() {
-        return webClient.post()
+        return RetryUtils.retry(() -> webClient.post()
                 .uri("/control/stop")
                 .bodyValue(Map.of())
                 .retrieve()
                 .bodyToMono(ControlResponseModel.class)
-                .block();
+                .block(),
+                MAX_RETRIES);
     }
 
     public ControlResponseModel getControlStatus() {
-        return webClient.get()
+        return RetryUtils.retry(() -> webClient.get()
                 .uri("/control/status")
                 .retrieve()
-                .bodyToMono(ControlResponseModel.class).block();
+                .bodyToMono(ControlResponseModel.class).block(),
+                MAX_RETRIES);
     }
 }
+
