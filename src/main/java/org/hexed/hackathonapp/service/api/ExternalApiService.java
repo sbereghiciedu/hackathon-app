@@ -270,7 +270,7 @@ public class ExternalApiService {
     }
 
     int getMaxRetries() {
-        return serverVersion == 4 ? 100 : 1;
+        return serverVersion > 3 ? 100 : 1;
     }
 }
 
