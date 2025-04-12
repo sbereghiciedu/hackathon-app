@@ -44,6 +44,10 @@ public class Simulator implements Runnable {
         DispatchStore.getInstance().getDispatches().clear();
         State state = new State();
         populateInterventionCentersV0(state);
+        List<RequestModel> requests = api.getCallsQueue();
+        for (RequestModel request : requests) {
+            state.addRequest(request);
+        }
 
         boolean stillPlaying = true;
 
