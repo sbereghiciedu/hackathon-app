@@ -30,6 +30,8 @@ public class ExternalApiService {
     private static final int MAX_RETRIES = 100;
     private final WebClient webClient;
 
+    private TokenPair tokenPair = null;
+
     public ExternalApiService() {
         String url = System.getProperties().getProperty("external.api.url");
 
@@ -42,6 +44,11 @@ public class ExternalApiService {
     public RequestModel getCallsNext() {
         return RetryUtils.retry(() -> webClient.get()
                         .uri("/calls/next")
+                        .headers(headers -> {
+                            if (tokenPair != null) {
+                                headers.setBearerAuth(tokenPair.token);
+                            }
+                        })
                         .retrieve()
                         .onStatus(HttpStatusCode::is4xxClientError, this::handle4xxError) // Handle 4xx errors
                         .bodyToMono(RequestModel.class)
@@ -66,6 +73,11 @@ public class ExternalApiService {
         };
         return RetryUtils.retry(() -> webClient.get()
                         .uri("/calls/queue")
+                        .headers(headers -> {
+                            if (tokenPair != null) {
+                                headers.setBearerAuth(tokenPair.token);
+                            }
+                        })
                         .retrieve()
                         .bodyToMono(typeReference).block(),
                 MAX_RETRIES);
@@ -77,6 +89,11 @@ public class ExternalApiService {
         };
         return RetryUtils.retry(() -> webClient.get()
                         .uri("/locations")
+                        .headers(headers -> {
+                            if (tokenPair != null) {
+                                headers.setBearerAuth(tokenPair.token);
+                            }
+                        })
                         .retrieve()
                         .bodyToMono(typeReference).block(),
                 MAX_RETRIES);
@@ -87,6 +104,11 @@ public class ExternalApiService {
         };
         return RetryUtils.retry(() -> webClient.get()
                         .uri("/" + type.getKey() + "/search")
+                        .headers(headers -> {
+                            if (tokenPair != null) {
+                                headers.setBearerAuth(tokenPair.token);
+                            }
+                        })
                         .retrieve()
                         .bodyToMono(typeReference).block(),
                 MAX_RETRIES);
@@ -96,6 +118,11 @@ public class ExternalApiService {
         String uri = String.format("/" + type.getKey() + "/searchbycity?county=%s&city=%s", county, city);
         return RetryUtils.retry(() -> webClient.get()
                         .uri(uri)
+                        .headers(headers -> {
+                            if (tokenPair != null) {
+                                headers.setBearerAuth(tokenPair.token);
+                            }
+                        })
                         .retrieve()
                         .bodyToMono(Integer.class).block(),
                 MAX_RETRIES);
@@ -105,6 +132,11 @@ public class ExternalApiService {
         return RetryUtils.retry(() -> webClient.post()
                         .uri("/" + type.getKey() + "/dispatch")
                         .bodyValue(dispatchModel)
+                        .headers(headers -> {
+                            if (tokenPair != null) {
+                                headers.setBearerAuth(tokenPair.token);
+                            }
+                        })
                         .retrieve()
                         .bodyToMono(String.class)
                         .block(),
