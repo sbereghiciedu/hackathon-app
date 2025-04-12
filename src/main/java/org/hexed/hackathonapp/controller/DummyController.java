@@ -25,16 +25,13 @@ public class DummyController {
 
     @GetMapping
     public String test() {
-        logger.info("Resetting server");
-        ControlResponseModel status = api.postControlReset(new ResetParamsModel("dummy", 100, 10));
-        logger.info(status.toString());
+        api.resetServer(new ResetParamsModel("dummy", 100, 10));
 
         Simulator simulator = new Simulator(api, new DummyDispatcher(), logger);
-        simulator.setStage(4);
         simulator.run();
 
         logger.info("Stopping server");
-        status = api.postControlStop();
+        ControlResponseModel status = api.postControlStop();
         logger.info(status.toString());
 
         return status.toString();
@@ -42,9 +39,7 @@ public class DummyController {
 
     @GetMapping(value = "/2")
     public String test2() {
-        ControlResponseModel controlStatus = api.getControlStatus();
-        ControlResponseModel controlResetStatus = api.postControlReset(new ResetParamsModel("dummy", 100, 10));
-
+        new ResetParamsModel("dummy", 100, 10);
         Simulator simulator = new Simulator(api, new MaxFlowMinCostDispatcher(), logger);
         simulator.run();
 
