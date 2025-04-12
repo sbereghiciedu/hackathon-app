@@ -59,28 +59,27 @@ public class MinCostMaxFlow {
 
     public static int[] minCostFlow(List<Edge>[] graph, int s, int t, int maxf) {
         int n = graph.length;
-        int[] prio = new int[n];
+        int[] dp = new int[n];
         int[] curflow = new int[n];
         int[] prevedge = new int[n];
         int[] prevnode = new int[n];
         int[] dist = new int[n];
 
-        // bellmanFord invocation can be skipped if edges costs are non-negative
         bellmanFord(graph, s, dist);
         int flow = 0;
         int flowCost = 0;
         while (flow < maxf) {
             PriorityQueue<Long> q = new PriorityQueue<>();
             q.add((long) s);
-            Arrays.fill(prio, Integer.MAX_VALUE);
-            prio[s] = 0;
+            Arrays.fill(dp, Integer.MAX_VALUE);
+            dp[s] = 0;
             boolean[] finished = new boolean[n];
             curflow[s] = Integer.MAX_VALUE;
             while (!finished[t] && !q.isEmpty()) {
                 long cur = q.remove();
                 int u = (int) (cur & 0xFFFF_FFFFL);
                 int priou = (int) (cur >>> 32);
-                if (priou != prio[u])
+                if (priou != dp[u])
                     continue;
                 finished[u] = true;
                 for (int i = 0; i < graph[u].size(); i++) {
@@ -88,9 +87,9 @@ public class MinCostMaxFlow {
                     if (e.f >= e.cap)
                         continue;
                     int v = e.to;
-                    int nprio = prio[u] + e.cost + dist[u] - dist[v];
-                    if (prio[v] > nprio) {
-                        prio[v] = nprio;
+                    int nprio = dp[u] + e.cost + dist[u] - dist[v];
+                    if (dp[v] > nprio) {
+                        dp[v] = nprio;
                         q.add(((long) nprio << 32) + v);
                         prevnode[v] = u;
                         prevedge[v] = i;
@@ -98,11 +97,11 @@ public class MinCostMaxFlow {
                     }
                 }
             }
-            if (prio[t] == Integer.MAX_VALUE)
+            if (dp[t] == Integer.MAX_VALUE)
                 break;
             for (int i = 0; i < n; i++)
                 if (finished[i])
-                    dist[i] += prio[i] - prio[t];
+                    dist[i] += dp[i] - dp[t];
             int df = Math.min(curflow[t], maxf - flow);
             flow += df;
             for (int v = t; v != s; v = prevnode[v]) {
@@ -139,50 +138,5 @@ public class MinCostMaxFlow {
             }
         }
         return solution;
-    }
-
-    public static void main(String[] args) throws FileNotFoundException {
-        InputReader in = new InputReader(new FileInputStream("fmcm.in"));
-        PrintWriter out = new PrintWriter(new FileOutputStream("fmcm.out"));
-
-        int n = in.nextInt(), m = in.nextInt();
-        int source = in.nextInt() - 1, destination = in.nextInt() - 1;
-        List<InputEdge> edges = new ArrayList<>();
-        while (m-- > 0) {
-            int x = in.nextInt() - 1;
-            int y = in.nextInt() - 1;
-            int cost = in.nextInt();
-            int capacity = in.nextInt();
-            edges.add(new InputEdge(x, y, capacity, cost));
-        }
-
-        List<List<Integer>> run = run(n, edges);
-
-        out.close();
-    }
-
-    static class InputReader {
-        public BufferedReader reader;
-        public StringTokenizer tokenizer;
-
-        public InputReader(InputStream stream) {
-            reader = new BufferedReader(new InputStreamReader(stream), 32768);
-            tokenizer = null;
-        }
-
-        public String next() {
-            while (tokenizer == null || !tokenizer.hasMoreTokens()) {
-                try {
-                    tokenizer = new StringTokenizer(reader.readLine());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            return tokenizer.nextToken();
-        }
-
-        public int nextInt() {
-            return Integer.parseInt(next());
-        }
     }
 }

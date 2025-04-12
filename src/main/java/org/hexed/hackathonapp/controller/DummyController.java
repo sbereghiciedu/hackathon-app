@@ -56,14 +56,14 @@ public class DummyController {
 
     @GetMapping(value = "/2")
     public String test2() {
-        new ResetParamsModel("dummy", 100, 10);
-        Simulator simulator = new Simulator(api, new MaxFlowMinCostDispatcher(), logger);
+        api.resetServer(new ResetParamsModel("gudrun", 25, 5), 5);
+        Simulator simulator = new Simulator(api, new MaxFlowMinCostDispatcher(MaxFlowMinCostDispatcher.RUN_MODE_CHOOSE_ONE_WITH_MOST_CARS), logger);
         simulator.run();
 
         logger.info("Stopping server");
         ControlResponseModel controlStopStatus = api.postControlStop();
         logger.info(controlStopStatus.toString());
 
-        return controlStopStatus.toString();
+        return controlStopStatus.toJson();
     }
 }

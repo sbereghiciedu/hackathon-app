@@ -17,6 +17,16 @@ import java.util.Map;
 public class MaxFlowMinCostDispatcher implements Dispatcher {
     Logger logger = LoggerFactory.getLogger(MaxFlowMinCostDispatcher.class);
 
+    public static final int RUN_MODE_CHOOSE_ALL = 0;
+    public static final int RUN_MODE_CHOOSE_ONE_WITH_MOST_CARS = 1;
+    public static final int RUN_MODE_CHOOSE_ONLY_ONE_CAR = 2;
+
+    private int runMode;
+
+    public MaxFlowMinCostDispatcher(int runMode) {
+        this.runMode = runMode;
+    }
+
 
     @Override
     public DispatchResponse dispatch(State state, RequestType type) {
@@ -59,9 +69,12 @@ public class MaxFlowMinCostDispatcher implements Dispatcher {
                 if (!foundI || !foundJ) {
                     int k = 1;
                 }
-
-                int cost = state.getDistances()[i][j];
-                edges.add(new InputEdge(fromId, toId, capacity, cost));
+                try {
+                    int cost = state.getDistances()[i][j];
+                    edges.add(new InputEdge(fromId, toId, capacity, cost));
+                } catch (Exception e) {
+                    int k = 1;
+                }
             }
             ++toId;
         }
@@ -88,11 +101,20 @@ public class MaxFlowMinCostDispatcher implements Dispatcher {
 
         solution.sort((a, b) -> b.get(2) - a.get(2));
 
+
+        boolean onlyOneCar = runMode == RUN_MODE_CHOOSE_ONLY_ONE_CAR;
+        if (runMode == 0) {
+        } else if (runMode == 1) {
+            solution = solution.subList(0, 1);
+        } else if (runMode == 2) {
+            solution = solution.subList(0, 1);
+        }
+
         for (List<Integer> ints : solution) {
             int sourceId = ints.get(0);
             InterventionCenterModel center = sourceNodes.get(sourceId - 1);
             int destId = ints.get(1);
-            int quantity = ints.get(2);
+            int quantity = onlyOneCar ? 1 : ints.get(2);
             State.Request destination = destinationNodes.get(destId - sourceNodes.size() - 1);
 
             response.dispatch(destination, center, quantity);
