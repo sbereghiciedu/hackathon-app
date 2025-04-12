@@ -1,6 +1,5 @@
 package org.hexed.hackathonapp.engine;
 
-import org.hexed.hackathonapp.model.api.calls.RequestDetail;
 import org.hexed.hackathonapp.model.api.calls.RequestModel;
 import org.hexed.hackathonapp.model.api.calls.RequestType;
 import org.hexed.hackathonapp.model.api.exceptions.CallLimitException;
@@ -47,14 +46,13 @@ public class Simulator implements Runnable {
 
         boolean stillPlaying = true;
 
-        // TODO
-        RequestType type = RequestType.MEDICAL;
         while (stillPlaying) {
             RequestModel req;
             do {
                 req = null;
                 try {
                     req = api.getCallsNext();
+                    System.out.println(req);
                     state.addRequest(req);
                 } catch (CallLimitException e) {
                     // nothing to do, exit the loop smoothly
@@ -64,28 +62,41 @@ public class Simulator implements Runnable {
 
             } while (req != null);
 
-            Dispatcher.DispatchResponse response = dispatcher.dispatch(state, type);
+            int dispatchCount = 0;
 
-            if (response.getDispatches().isEmpty()) {
-                stillPlaying = false;
-            } else for (int i = 0; i < response.getDispatches().size(); i++) {
-                DispatchModel dispatch = response.getDispatches().get(i);
-                State.Request request = response.getRequests().get(i);
-                InterventionCenterModel center = response.getCenters().get(i);
+            for (RequestType type : RequestType.values()) {
+                Dispatcher.DispatchResponse response = dispatcher.dispatch(state, type);
 
-                request.setQ(request.getQ() - dispatch.getQuantity());
-                if (request.getQ() == 0) {
-                    state.getRequests().get(type).remove(request);
+                dispatchCount += response.getDispatches().size();
+
+                for (int i = 0; i < response.getDispatches().size(); i++) {
+                    DispatchModel dispatch = response.getDispatches().get(i);
+                    State.Request request = response.getRequests().get(i);
+                    InterventionCenterModel center = response.getCenters().get(i);
+
+                    System.out.println(dispatch);
+                    center.setQuantity(api.getInterventionCentersByCity(type, dispatch.getSourceCounty(), dispatch.getSourceCity()));
+                    if (center.getQuantity() >= dispatch.getQuantity()) {
+                        api.postDispatch(type, dispatch);
+                        request.setQ(request.getQ() - dispatch.getQuantity());
+                        if (request.getQ() == 0) {
+                            state.getRequests().get(type).remove(request);
+                        }
+
+                        center.setQuantity(center.getQuantity() - dispatch.getQuantity());
+                        System.out.println(type.getKey() + "\tP: " + api.getControlStatus().getPenalty());
+                    } else {
+                        System.out.println("not enough: " + center.getQuantity());
+                    }
+                    if (center.getQuantity() == 0) {
+                        state.getInterventionCenters().get(type).remove(center);
+                    }
                 }
-
-                center.setQuantity(center.getQuantity() - dispatch.getQuantity());
-                if (center.getQuantity() == 0) {
-                    state.getInterventionCenters().get(type).remove(center);
-                }
-
-                api.postDispatch(type, dispatch);
             }
 
+            if (dispatchCount == 0) {
+                stillPlaying = false;
+            }
         }
     }
 }

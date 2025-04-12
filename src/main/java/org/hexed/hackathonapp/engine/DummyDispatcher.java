@@ -25,7 +25,9 @@ public class DummyDispatcher implements Dispatcher {
 
             DispatchModel dispatch = response.dispatch(request, center);
 
-            System.out.println(dispatch);
+            if (dispatch.getQuantity() == 0) {
+                throw new RuntimeException("dispatch quantity cannot be 0!");
+            }
         }
 
         return response;
