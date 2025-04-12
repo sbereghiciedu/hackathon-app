@@ -63,5 +63,14 @@ public class RequestModel {
         return result;
     }
 
-
+    @Override
+    public String toString() {
+        return "RequestModel{" +
+                "city='" + city + '\'' +
+                ", county='" + county + '\'' +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
+                ", requests=" + requests +
+                '}';
+    }
 }

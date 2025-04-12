@@ -26,4 +26,11 @@ public class RequestDetail {
         this.quantity = quantity;
     }
 
+    @Override
+    public String toString() {
+        return "RequestDetail{" +
+                "type='" + type + '\'' +
+                ", quantity=" + quantity +
+                '}';
+    }
 }
