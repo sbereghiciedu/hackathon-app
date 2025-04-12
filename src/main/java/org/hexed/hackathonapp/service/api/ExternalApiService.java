@@ -1,5 +1,6 @@
 package org.hexed.hackathonapp.service.api;
 
+import org.hexed.hackathonapp.controller.DebugController;
 import org.hexed.hackathonapp.model.api.LoginModel;
 import org.hexed.hackathonapp.model.api.TokenPair;
 import org.hexed.hackathonapp.model.api.calls.RequestType;
@@ -11,6 +12,8 @@ import org.hexed.hackathonapp.model.api.control.ControlResponseModel;
 import org.hexed.hackathonapp.model.api.location.LocationModel;
 import org.hexed.hackathonapp.model.api.control.ResetParamsModel;
 import org.hexed.hackathonapp.model.api.interventioncenter.DispatchModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -19,18 +22,22 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 @Service
 public class ExternalApiService {
 
+    private Logger logger = LoggerFactory.getLogger(ExternalApiService.class);
     private static final int MAX_RETRIES = 100;
     private final WebClient webClient;
 
     private TokenPair tokenPair = null;
+    private int serverVersion = 0;
 
     public ExternalApiService() {
         String url = System.getProperties().getProperty("external.api.url");
@@ -42,7 +49,7 @@ public class ExternalApiService {
     }
 
     public RequestModel getCallsNext() {
-        return RetryUtils.retry(() -> webClient.get()
+        return retry(() -> webClient.get()
                         .uri("/calls/next")
                         .headers(headers -> {
                             if (tokenPair != null) {
@@ -71,7 +78,7 @@ public class ExternalApiService {
     public List<RequestModel> getCallsQueue() {
         ParameterizedTypeReference<List<RequestModel>> typeReference = new ParameterizedTypeReference<>() {
         };
-        return RetryUtils.retry(() -> webClient.get()
+        return retry(() -> webClient.get()
                         .uri("/calls/queue")
                         .headers(headers -> {
                             if (tokenPair != null) {
@@ -87,7 +94,7 @@ public class ExternalApiService {
     public List<LocationModel> getLocations() {
         ParameterizedTypeReference<List<LocationModel>> typeReference = new ParameterizedTypeReference<>() {
         };
-        return RetryUtils.retry(() -> webClient.get()
+        return retry(() -> webClient.get()
                         .uri("/locations")
                         .headers(headers -> {
                             if (tokenPair != null) {
@@ -102,7 +109,7 @@ public class ExternalApiService {
     public List<InterventionCenterModel> getInterventionCenters(RequestType type) {
         ParameterizedTypeReference<List<InterventionCenterModel>> typeReference = new ParameterizedTypeReference<>() {
         };
-        return RetryUtils.retry(() -> webClient.get()
+        return retry(() -> webClient.get()
                         .uri("/" + type.getKey() + "/search")
                         .headers(headers -> {
                             if (tokenPair != null) {
@@ -116,7 +123,7 @@ public class ExternalApiService {
 
     public Integer getInterventionCentersByCity(RequestType type, String county, String city) {
         String uri = String.format("/" + type.getKey() + "/searchbycity?county=%s&city=%s", county, city);
-        return RetryUtils.retry(() -> webClient.get()
+        return retry(() -> webClient.get()
                         .uri(uri)
                         .headers(headers -> {
                             if (tokenPair != null) {
@@ -129,7 +136,7 @@ public class ExternalApiService {
     }
 
     public String postDispatch(RequestType type, DispatchModel dispatchModel) {
-        return RetryUtils.retry(() -> webClient.post()
+        return retry(() -> webClient.post()
                         .uri("/" + type.getKey() + "/dispatch")
                         .bodyValue(dispatchModel)
                         .headers(headers -> {
@@ -145,7 +152,7 @@ public class ExternalApiService {
 
     // CONTROL
     public ControlResponseModel postControlReset(ResetParamsModel resetParamsModel) {
-        return RetryUtils.retry(() -> webClient.post()
+        return retry(() -> webClient.post()
                         .uri("/control/reset?seed=%s&targetDispatches=%d&maxActiveCalls=%d".formatted(resetParamsModel.getSeed(), resetParamsModel.getTargetDispatches(), resetParamsModel.getMaxActiveCalls()))
                         .bodyValue(Map.of())
                         .retrieve()
@@ -155,7 +162,7 @@ public class ExternalApiService {
     }
 
     public ControlResponseModel postControlStop() {
-        return RetryUtils.retry(() -> webClient.post()
+        return retry(() -> webClient.post()
                         .uri("/control/stop")
                         .bodyValue(Map.of())
                         .retrieve()
@@ -165,7 +172,7 @@ public class ExternalApiService {
     }
 
     public ControlResponseModel getControlStatus() {
-        return RetryUtils.retry(() -> webClient.get()
+        return retry(() -> webClient.get()
                         .uri("/control/status")
                         .retrieve()
                         .bodyToMono(ControlResponseModel.class).block(),
@@ -173,23 +180,95 @@ public class ExternalApiService {
     }
 
     public TokenPair postLogin(LoginModel loginModel) {
-        return RetryUtils.retry(() -> webClient.post()
+        return webClient.post()
                         .uri("/auth/login")
                         .bodyValue(loginModel)
                         .retrieve()
                         .bodyToMono(TokenPair.class)
-                        .block(),
-                MAX_RETRIES);
+                        .block();
     }
 
     public TokenPair postRefreshToken(TokenPair token) {
-        return RetryUtils.retry(() -> webClient.post()
+        return webClient.post()
                         .uri("auth/refreshtoken")
                         .header("refresh_token", token.refreshToken)
                         .retrieve()
                         .bodyToMono(TokenPair.class)
-                        .block(),
-                MAX_RETRIES);
+                        .block();
+    }
+
+    public void resetServer(ResetParamsModel resetParamsModel) {
+        LoginModel loginModel = new LoginModel("distancify", "hackathon");
+
+        logger.info("Resetting server");
+        ControlResponseModel controlResponseModel = postControlReset(resetParamsModel);
+        logger.info(controlResponseModel.toString());
+        serverVersion = 0;
+        tokenPair = null;
+        try {
+            tokenPair = postLogin(loginModel);
+            serverVersion = 5;
+        } catch (Exception e) {
+            logger.info("No authorization, server version less than 5");
+        }
+        if (serverVersion == 0) {
+            int retryCount = 3;
+            while (retryCount-- > 0) {
+                try {
+                    getLocations();
+                } catch (Exception e) {
+                    logger.info("Unexpected error, server version must be 4");
+                    serverVersion = 4;
+                }
+            }
+        }
+        if (serverVersion == 0) {
+            try {
+                getInterventionCenters(RequestType.UTILITY);
+                serverVersion = 3;
+            } catch (Exception e) {
+                logger.info("no utilities, server version less than 3");
+            }
+        }
+
+        if (serverVersion == 0) {
+            try {
+                getInterventionCenters(RequestType.POLICE);
+                serverVersion = 2;
+            } catch (Exception e) {
+                logger.info("no police, server version less than 2");
+            }
+        }
+
+        logger.info("Server version is " + serverVersion);
+    }
+
+    public int getServerVersion() {
+        return serverVersion;
+    }
+
+    public <T> T retry(Supplier<T> supplier, int maxRetries) {
+        int attempts = 0;
+        while (true) {
+            try {
+                T result = supplier.get();
+                if (result instanceof Integer && (Integer) result < 0) {
+                    logger.info("Invalid result: negative. Retrying");
+                    throw new RuntimeException("Retry triggered: result < 0");
+                }
+
+                return result;
+            } catch (WebClientResponseException.Unauthorized e) {
+                logger.info("Unauthorized, refresh token");
+                tokenPair = postRefreshToken(tokenPair);
+            } catch (Exception e) {
+                logger.info("Server error, retrying");
+                attempts++;
+                if (attempts > maxRetries) {
+                    throw e;
+                }
+            }
+        }
     }
 }
 
