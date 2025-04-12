@@ -27,7 +27,12 @@ public class Simulator implements Runnable {
 
     protected void populateInterventionCentersV0(State state) {
         for (RequestType type : RequestType.values(api.getServerVersion())) {
-            state.getInterventionCenters().get(type).addAll(api.getInterventionCenters(type));
+            List<InterventionCenterModel> centers = api.getInterventionCenters(type);
+            for (InterventionCenterModel center : centers) {
+                if (center.getQuantity() > 0) {
+                    state.getInterventionCenters().get(type).add(center);
+                }
+            }
         }
     }
 
