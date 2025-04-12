@@ -8,17 +8,20 @@ import org.hexed.hackathonapp.model.api.interventioncenter.DispatchModel;
 import org.hexed.hackathonapp.model.api.interventioncenter.InterventionCenterModel;
 import org.hexed.hackathonapp.model.api.location.LocationModel;
 import org.hexed.hackathonapp.service.api.ExternalApiService;
+import org.slf4j.Logger;
 
 import java.util.List;
 
 public class Simulator implements Runnable {
 
+    private final Logger logger;
     private final ExternalApiService api;
     private final Dispatcher dispatcher;
 
-    public Simulator(ExternalApiService api, Dispatcher dispatcher) {
+    public Simulator(ExternalApiService api, Dispatcher dispatcher, Logger logger) {
         this.api = api;
         this.dispatcher = dispatcher;
+        this.logger = logger;
     }
 
     protected void populateInterventionCentersV0(State state) {
@@ -46,18 +49,22 @@ public class Simulator implements Runnable {
         populateInterventionCentersV0(state);
         List<RequestModel> requests = api.getCallsQueue();
         for (RequestModel request : requests) {
+            logger.info("Loading queue...");
+            logger.info(request.toString());
             state.addRequest(request);
         }
 
         boolean stillPlaying = true;
 
+        logger.info("Start processing");
         while (stillPlaying) {
             RequestModel req;
             do {
                 req = null;
                 try {
                     req = api.getCallsNext();
-                    System.out.println(req);
+                    logger.info("Loading next call...");
+                    logger.info(req.toString());
                     state.addRequest(req);
                 } catch (CallLimitException e) {
                     // TODO consider not requesting more calls unless we satisfied a request
@@ -79,7 +86,8 @@ public class Simulator implements Runnable {
                     State.Request request = response.getRequests().get(i);
                     InterventionCenterModel center = response.getCenters().get(i);
 
-                    System.out.println(dispatch);
+                    logger.info("Attempting dispatch of type " + type.getKey());
+                    logger.info(dispatch.toString());
                     center.setQuantity(api.getInterventionCentersByCity(type, dispatch.getSourceCounty(), dispatch.getSourceCity()));
                     if (center.getQuantity() >= dispatch.getQuantity()) {
                         api.postDispatch(type, dispatch);
@@ -90,9 +98,9 @@ public class Simulator implements Runnable {
                         }
 
                         center.setQuantity(center.getQuantity() - dispatch.getQuantity());
-                        System.out.println(type.getKey() + "\tP: " + api.getControlStatus().getPenalty());
+                        logger.info("Dispatched");
                     } else {
-                        System.out.println("not enough: " + center.getQuantity());
+                        logger.info("Dispatch Failed, insufficient available resources: " + center.getQuantity());
                     }
                     if (center.getQuantity() == 0) {
                         state.getInterventionCenters().get(type).remove(center);
@@ -104,5 +112,6 @@ public class Simulator implements Runnable {
                 stillPlaying = false;
             }
         }
+        logger.info("Processing complete");
     }
 }

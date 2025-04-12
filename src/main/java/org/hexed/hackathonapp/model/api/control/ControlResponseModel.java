@@ -304,5 +304,33 @@ public class ControlResponseModel {
         public void setOverDispatched(int overDispatched) {
             this.overDispatched = overDispatched;
         }
+
+        @Override
+        public String toString() {
+            return "Errors{" +
+                    "missed=" + missed +
+                    ", overDispatched=" + overDispatched +
+                    '}';
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "ControlResponseModel{" +
+                "status='" + status + '\'' +
+                ", runningTime='" + runningTime + '\'' +
+                ", seed='" + seed + '\'' +
+                ", requestCount=" + requestCount +
+                ", maxActiveCalls=" + maxActiveCalls +
+                ", totalDispatches=" + totalDispatches +
+                ", targetDispatches=" + targetDispatches +
+                ", distance=" + distance +
+                ", penalty=" + penalty +
+                ", httpRequests=" + httpRequests +
+                ", emulatorVersion=" + emulatorVersion +
+                ", signature='" + signature + '\'' +
+                ", checksum='" + checksum + '\'' +
+                ", errors=" + errors +
+                '}';
     }
 }

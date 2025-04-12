@@ -24,12 +24,17 @@ public class DummyController {
 
     @GetMapping
     public String test() {
-        ControlResponseModel controlStatus = api.getControlStatus();
-        ControlResponseModel controlResetStatus = api.postControlReset(new ResetParamsModel("dummy", 100, 10));
+        logger.info("Resetting server");
+        ControlResponseModel status = api.postControlReset(new ResetParamsModel("dummy", 100, 10));
+        logger.info(status.toString());
 
-        Simulator simulator = new Simulator(api, new DummyDispatcher());
+        Simulator simulator = new Simulator(api, new DummyDispatcher(), logger);
         simulator.run();
 
-        return "Done!";
+        logger.info("Stopping server");
+        ControlResponseModel controlStopStatus = api.postControlStop();
+        logger.info(controlStopStatus.toString());
+
+        return controlStopStatus.toString();
     }
 }
