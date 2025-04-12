@@ -1,5 +1,7 @@
 package org.hexed.hackathonapp.service.api;
 
+import org.hexed.hackathonapp.model.api.LoginModel;
+import org.hexed.hackathonapp.model.api.TokenPair;
 import org.hexed.hackathonapp.model.api.calls.RequestType;
 import org.hexed.hackathonapp.model.api.exceptions.CallLimitException;
 import org.hexed.hackathonapp.model.api.exceptions.NoMoreCallsException;
@@ -39,11 +41,11 @@ public class ExternalApiService {
 
     public RequestModel getCallsNext() {
         return RetryUtils.retry(() -> webClient.get()
-                .uri("/calls/next")
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, this::handle4xxError) // Handle 4xx errors
-                .bodyToMono(RequestModel.class)
-                .block(),
+                        .uri("/calls/next")
+                        .retrieve()
+                        .onStatus(HttpStatusCode::is4xxClientError, this::handle4xxError) // Handle 4xx errors
+                        .bodyToMono(RequestModel.class)
+                        .block(),
                 MAX_RETRIES); // Block to fetch the result synchronously
     }
 
@@ -63,9 +65,9 @@ public class ExternalApiService {
         ParameterizedTypeReference<List<RequestModel>> typeReference = new ParameterizedTypeReference<>() {
         };
         return RetryUtils.retry(() -> webClient.get()
-                .uri("/calls/queue")
-                .retrieve()
-                .bodyToMono(typeReference).block(),
+                        .uri("/calls/queue")
+                        .retrieve()
+                        .bodyToMono(typeReference).block(),
                 MAX_RETRIES);
     }
 
@@ -74,9 +76,9 @@ public class ExternalApiService {
         ParameterizedTypeReference<List<LocationModel>> typeReference = new ParameterizedTypeReference<>() {
         };
         return RetryUtils.retry(() -> webClient.get()
-                .uri("/locations")
-                .retrieve()
-                .bodyToMono(typeReference).block(),
+                        .uri("/locations")
+                        .retrieve()
+                        .bodyToMono(typeReference).block(),
                 MAX_RETRIES);
     }
 
@@ -84,57 +86,77 @@ public class ExternalApiService {
         ParameterizedTypeReference<List<InterventionCenterModel>> typeReference = new ParameterizedTypeReference<>() {
         };
         return RetryUtils.retry(() -> webClient.get()
-                .uri("/"+ type.getKey() + "/search")
-                .retrieve()
-                .bodyToMono(typeReference).block(),
+                        .uri("/" + type.getKey() + "/search")
+                        .retrieve()
+                        .bodyToMono(typeReference).block(),
                 MAX_RETRIES);
     }
 
     public Integer getInterventionCentersByCity(RequestType type, String county, String city) {
         String uri = String.format("/" + type.getKey() + "/searchbycity?county=%s&city=%s", county, city);
         return RetryUtils.retry(() -> webClient.get()
-                .uri(uri)
-                .retrieve()
-                .bodyToMono(Integer.class).block(),
+                        .uri(uri)
+                        .retrieve()
+                        .bodyToMono(Integer.class).block(),
                 MAX_RETRIES);
     }
 
     public String postDispatch(RequestType type, DispatchModel dispatchModel) {
         return RetryUtils.retry(() -> webClient.post()
-                .uri("/" + type.getKey() + "/dispatch")
-                .bodyValue(dispatchModel)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block(),
+                        .uri("/" + type.getKey() + "/dispatch")
+                        .bodyValue(dispatchModel)
+                        .retrieve()
+                        .bodyToMono(String.class)
+                        .block(),
                 MAX_RETRIES);
     }
 
     // CONTROL
     public ControlResponseModel postControlReset(ResetParamsModel resetParamsModel) {
         return RetryUtils.retry(() -> webClient.post()
-                .uri("/control/reset?seed=%s&targetDispatches=%d&maxActiveCalls=%d".formatted(resetParamsModel.getSeed(), resetParamsModel.getTargetDispatches(), resetParamsModel.getMaxActiveCalls()))
-                .bodyValue(Map.of())
-                .retrieve()
-                .bodyToMono(ControlResponseModel.class)
-                .block(),
+                        .uri("/control/reset?seed=%s&targetDispatches=%d&maxActiveCalls=%d".formatted(resetParamsModel.getSeed(), resetParamsModel.getTargetDispatches(), resetParamsModel.getMaxActiveCalls()))
+                        .bodyValue(Map.of())
+                        .retrieve()
+                        .bodyToMono(ControlResponseModel.class)
+                        .block(),
                 MAX_RETRIES);
     }
 
     public ControlResponseModel postControlStop() {
         return RetryUtils.retry(() -> webClient.post()
-                .uri("/control/stop")
-                .bodyValue(Map.of())
-                .retrieve()
-                .bodyToMono(ControlResponseModel.class)
-                .block(),
+                        .uri("/control/stop")
+                        .bodyValue(Map.of())
+                        .retrieve()
+                        .bodyToMono(ControlResponseModel.class)
+                        .block(),
                 MAX_RETRIES);
     }
 
     public ControlResponseModel getControlStatus() {
         return RetryUtils.retry(() -> webClient.get()
-                .uri("/control/status")
-                .retrieve()
-                .bodyToMono(ControlResponseModel.class).block(),
+                        .uri("/control/status")
+                        .retrieve()
+                        .bodyToMono(ControlResponseModel.class).block(),
+                MAX_RETRIES);
+    }
+
+    public TokenPair postLogin(LoginModel loginModel) {
+        return RetryUtils.retry(() -> webClient.post()
+                        .uri("/auth/login")
+                        .bodyValue(loginModel)
+                        .retrieve()
+                        .bodyToMono(TokenPair.class)
+                        .block(),
+                MAX_RETRIES);
+    }
+
+    public TokenPair postRefreshToken(TokenPair token) {
+        return RetryUtils.retry(() -> webClient.post()
+                        .uri("auth/refreshtoken")
+                        .header("refresh_token", token.refreshToken)
+                        .retrieve()
+                        .bodyToMono(TokenPair.class)
+                        .block(),
                 MAX_RETRIES);
     }
 }
