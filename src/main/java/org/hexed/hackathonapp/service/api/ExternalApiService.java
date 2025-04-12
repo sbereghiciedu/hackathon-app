@@ -189,12 +189,16 @@ public class ExternalApiService {
     public void resetServer(ResetParamsModel resetParamsModel) {
         resetServer(resetParamsModel, 0);
     }
+
     public void resetServer(ResetParamsModel resetParamsModel, int serverVersion) {
         LoginModel loginModel = new LoginModel("distancify", "hackathon");
 
         logger.info("Resetting server");
         ControlResponseModel controlResponseModel = postControlReset(resetParamsModel);
         logger.info(controlResponseModel.toString());
+        if (serverVersion == 5) {
+            tokenPair = postLogin(loginModel);
+        }
         if (serverVersion == 0) {
             tokenPair = null;
             try {
