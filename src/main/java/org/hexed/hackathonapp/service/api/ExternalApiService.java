@@ -29,8 +29,10 @@ public class ExternalApiService {
     private final WebClient webClient;
 
     public ExternalApiService() {
+        String url = System.getProperties().getProperty("external.api.url");
+
         this.webClient = WebClient.builder()
-                .baseUrl("http://localhost:5000")
+                .baseUrl(url)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
