@@ -198,18 +198,22 @@ public class ExternalApiService {
     }
 
     public void resetServer(ResetParamsModel resetParamsModel) {
+        resetServer(resetParamsModel, 0);
+    }
+    public void resetServer(ResetParamsModel resetParamsModel, int serverVersion) {
         LoginModel loginModel = new LoginModel("distancify", "hackathon");
 
         logger.info("Resetting server");
         ControlResponseModel controlResponseModel = postControlReset(resetParamsModel);
         logger.info(controlResponseModel.toString());
-        serverVersion = 0;
-        tokenPair = null;
-        try {
-            tokenPair = postLogin(loginModel);
-            serverVersion = 5;
-        } catch (Exception e) {
-            logger.info("No authorization, server version less than 5");
+        if (serverVersion == 0) {
+            tokenPair = null;
+            try {
+                tokenPair = postLogin(loginModel);
+                serverVersion = 5;
+            } catch (Exception e) {
+                logger.info("No authorization, server version less than 5");
+            }
         }
         if (serverVersion == 0) {
             int retryCount = 3;
@@ -240,6 +244,7 @@ public class ExternalApiService {
             }
         }
 
+        this.serverVersion = serverVersion;
         logger.info("Server version is " + serverVersion);
     }
 
