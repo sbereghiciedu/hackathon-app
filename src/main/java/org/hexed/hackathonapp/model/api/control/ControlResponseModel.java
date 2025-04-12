@@ -333,4 +333,14 @@ public class ControlResponseModel {
                 ", errors=" + errors +
                 '}';
     }
+
+    public String toJson() {
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            return objectMapper.writeValueAsString(this);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            e.printStackTrace(); // Logging the error
+            return "";
+        }
+    }
 }
