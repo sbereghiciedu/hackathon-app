@@ -42,7 +42,7 @@ public class Simulator implements Runnable {
 
     public void run() {
         DispatchStore.getInstance().getDispatches().clear();
-        State state = new State();
+        State state = new State(api.getLocations());
         populateInterventionCentersV0(state);
 
         boolean stillPlaying = true;

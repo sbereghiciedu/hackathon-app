@@ -40,6 +40,23 @@ public interface Dispatcher {
             return dispatch;
         }
 
+        public DispatchModel dispatch(State.Request request, InterventionCenterModel center, int q) {
+            DispatchModel dispatch = new DispatchModel();
+
+            dispatch.setSourceCounty(center.getCounty());
+            dispatch.setSourceCity(center.getCity());
+            dispatch.setTargetCounty(request.getCounty());
+            dispatch.setTargetCity(request.getCity());
+
+            dispatch.setQuantity(q);
+
+            dispatches.add(dispatch);
+            requests.add(request);
+            centers.add(center);
+
+            return dispatch;
+        }
+
         public List<DispatchModel> getDispatches() {
             return dispatches;
         }
