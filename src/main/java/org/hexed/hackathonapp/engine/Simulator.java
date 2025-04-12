@@ -41,6 +41,7 @@ public class Simulator implements Runnable {
     }
 
     public void run() {
+        DispatchStore.getInstance().getDispatches().clear();
         State state = new State();
         populateInterventionCentersV0(state);
 
@@ -78,6 +79,7 @@ public class Simulator implements Runnable {
                     center.setQuantity(api.getInterventionCentersByCity(type, dispatch.getSourceCounty(), dispatch.getSourceCity()));
                     if (center.getQuantity() >= dispatch.getQuantity()) {
                         api.postDispatch(type, dispatch);
+                        DispatchStore.getInstance().getDispatches().add(dispatch);
                         request.setQ(request.getQ() - dispatch.getQuantity());
                         if (request.getQ() == 0) {
                             state.getRequests().get(type).remove(request);

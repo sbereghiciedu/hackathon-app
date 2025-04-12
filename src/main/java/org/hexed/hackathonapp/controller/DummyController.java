@@ -25,7 +25,7 @@ public class DummyController {
     @GetMapping
     public String test() {
         ControlResponseModel controlStatus = api.getControlStatus();
-        ControlResponseModel controlResetStatus = api.postControlReset(new ResetParamsModel("dummy", 100, 5));
+        ControlResponseModel controlResetStatus = api.postControlReset(new ResetParamsModel("dummy", 100, 10));
 
         Simulator simulator = new Simulator(api, new DummyDispatcher());
         simulator.run();
