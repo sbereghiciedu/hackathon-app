@@ -25,7 +25,7 @@ public class DummyController {
 
     @GetMapping
     public String test() {
-        api.resetServer(new ResetParamsModel("dummy", 100, 10));
+        api.resetServer(new ResetParamsModel("bellalite", 10000, 10000), 1);
 
         Simulator simulator = new Simulator(api, new DummyDispatcher(), logger);
         simulator.run();
@@ -34,7 +34,7 @@ public class DummyController {
         ControlResponseModel status = api.postControlStop();
         logger.info(status.toString());
 
-        return status.toString();
+        return status.toJson();
     }
 
     @GetMapping(value = "/2")

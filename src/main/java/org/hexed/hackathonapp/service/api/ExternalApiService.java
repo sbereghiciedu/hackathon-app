@@ -1,17 +1,16 @@
 package org.hexed.hackathonapp.service.api;
 
-import org.hexed.hackathonapp.controller.DebugController;
 import org.hexed.hackathonapp.model.api.LoginModel;
 import org.hexed.hackathonapp.model.api.TokenPair;
+import org.hexed.hackathonapp.model.api.calls.RequestModel;
 import org.hexed.hackathonapp.model.api.calls.RequestType;
+import org.hexed.hackathonapp.model.api.control.ControlResponseModel;
+import org.hexed.hackathonapp.model.api.control.ResetParamsModel;
 import org.hexed.hackathonapp.model.api.exceptions.CallLimitException;
 import org.hexed.hackathonapp.model.api.exceptions.NoMoreCallsException;
-import org.hexed.hackathonapp.model.api.interventioncenter.InterventionCenterModel;
-import org.hexed.hackathonapp.model.api.calls.RequestModel;
-import org.hexed.hackathonapp.model.api.control.ControlResponseModel;
-import org.hexed.hackathonapp.model.api.location.LocationModel;
-import org.hexed.hackathonapp.model.api.control.ResetParamsModel;
 import org.hexed.hackathonapp.model.api.interventioncenter.DispatchModel;
+import org.hexed.hackathonapp.model.api.interventioncenter.InterventionCenterModel;
+import org.hexed.hackathonapp.model.api.location.LocationModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
@@ -33,7 +32,6 @@ import java.util.function.Supplier;
 public class ExternalApiService {
 
     private Logger logger = LoggerFactory.getLogger(ExternalApiService.class);
-    private static final int MAX_RETRIES = 100;
     private final WebClient webClient;
 
     private TokenPair tokenPair = null;
@@ -59,8 +57,7 @@ public class ExternalApiService {
                         .retrieve()
                         .onStatus(HttpStatusCode::is4xxClientError, this::handle4xxError) // Handle 4xx errors
                         .bodyToMono(RequestModel.class)
-                        .block(),
-                MAX_RETRIES); // Block to fetch the result synchronously
+                        .block()); // Block to fetch the result synchronously
     }
 
     private Mono<Throwable> handle4xxError(ClientResponse response) {
@@ -86,8 +83,7 @@ public class ExternalApiService {
                             }
                         })
                         .retrieve()
-                        .bodyToMono(typeReference).block(),
-                MAX_RETRIES);
+                        .bodyToMono(typeReference).block());
     }
 
     // LOCATIONS
@@ -102,8 +98,7 @@ public class ExternalApiService {
                             }
                         })
                         .retrieve()
-                        .bodyToMono(typeReference).block(),
-                MAX_RETRIES);
+                        .bodyToMono(typeReference).block());
     }
 
     public List<InterventionCenterModel> getInterventionCenters(RequestType type) {
@@ -117,8 +112,7 @@ public class ExternalApiService {
                             }
                         })
                         .retrieve()
-                        .bodyToMono(typeReference).block(),
-                MAX_RETRIES);
+                        .bodyToMono(typeReference).block());
     }
 
     public Integer getInterventionCentersByCity(RequestType type, String county, String city) {
@@ -131,8 +125,7 @@ public class ExternalApiService {
                             }
                         })
                         .retrieve()
-                        .bodyToMono(Integer.class).block(),
-                MAX_RETRIES);
+                        .bodyToMono(Integer.class).block());
     }
 
     public String postDispatch(RequestType type, DispatchModel dispatchModel) {
@@ -146,8 +139,7 @@ public class ExternalApiService {
                         })
                         .retrieve()
                         .bodyToMono(String.class)
-                        .block(),
-                MAX_RETRIES);
+                        .block());
     }
 
     // CONTROL
@@ -157,8 +149,7 @@ public class ExternalApiService {
                         .bodyValue(Map.of())
                         .retrieve()
                         .bodyToMono(ControlResponseModel.class)
-                        .block(),
-                MAX_RETRIES);
+                        .block());
     }
 
     public ControlResponseModel postControlStop() {
@@ -167,16 +158,14 @@ public class ExternalApiService {
                         .bodyValue(Map.of())
                         .retrieve()
                         .bodyToMono(ControlResponseModel.class)
-                        .block(),
-                MAX_RETRIES);
+                        .block());
     }
 
     public ControlResponseModel getControlStatus() {
         return retry(() -> webClient.get()
                         .uri("/control/status")
                         .retrieve()
-                        .bodyToMono(ControlResponseModel.class).block(),
-                MAX_RETRIES);
+                        .bodyToMono(ControlResponseModel.class).block());
     }
 
     public TokenPair postLogin(LoginModel loginModel) {
@@ -252,7 +241,7 @@ public class ExternalApiService {
         return serverVersion;
     }
 
-    public <T> T retry(Supplier<T> supplier, int maxRetries) {
+    public <T> T retry(Supplier<T> supplier) {
         int attempts = 0;
         while (true) {
             try {
@@ -269,11 +258,15 @@ public class ExternalApiService {
             } catch (Exception e) {
                 logger.info("Server error, retrying");
                 attempts++;
-                if (attempts > maxRetries) {
+                if (attempts > getMaxRetries()) {
                     throw e;
                 }
             }
         }
+    }
+
+    int getMaxRetries() {
+        return serverVersion == 4 ? 100 : 1;
     }
 }
 

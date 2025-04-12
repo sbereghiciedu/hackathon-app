@@ -58,22 +58,26 @@ public class Simulator implements Runnable {
         boolean stillPlaying = true;
 
         logger.info("Start processing");
+        boolean requestNext = true;
         while (stillPlaying) {
             RequestModel req;
-            do {
-                req = null;
-                try {
-                    req = api.getCallsNext();
-                    logger.info("Loading next call...");
-                    logger.info(req.toString());
-                    state.addRequest(req, api.getServerVersion());
-                } catch (CallLimitException e) {
-                    // TODO consider not requesting more calls unless we satisfied a request
-                } catch (NoMoreCallsException e) {
-                    // nothing to do, exit the loop smoothly
-                }
+            if (requestNext) {
+                do {
+                    req = null;
+                    try {
+                        req = api.getCallsNext();
+                        logger.info("Loading next call...");
+                        logger.info(req.toString());
+                        state.addRequest(req, api.getServerVersion());
+                    } catch (CallLimitException e) {
+                        // TODO consider not requesting more calls unless we satisfied a request
+                    } catch (NoMoreCallsException e) {
+                        // nothing to do, exit the loop smoothly
+                    }
 
-            } while (req != null);
+                } while (req != null);
+                requestNext = false;
+            }
 
             int dispatchCount = 0;
 
@@ -98,6 +102,7 @@ public class Simulator implements Runnable {
                         request.setQ(request.getQ() - dispatch.getQuantity());
                         if (request.getQ() == 0) {
                             state.getRequests().get(type).remove(request);
+                            requestNext = true;
                         }
 
                         center.setQuantity(center.getQuantity() - dispatch.getQuantity());
