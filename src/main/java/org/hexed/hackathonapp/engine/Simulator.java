@@ -86,7 +86,7 @@ public class Simulator implements Runnable {
                     State.Request request = response.getRequests().get(i);
                     InterventionCenterModel center = response.getCenters().get(i);
 
-                    logger.info("Attempting dispatch of type " + type.getKey());
+                    logger.info("Attempting dispatch of type {}", type.getKey());
                     logger.info(dispatch.toString());
                     center.setQuantity(api.getInterventionCentersByCity(type, dispatch.getSourceCounty(), dispatch.getSourceCity()));
                     if (center.getQuantity() >= dispatch.getQuantity()) {
