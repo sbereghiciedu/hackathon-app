@@ -39,9 +39,9 @@ public class State {
         }
     }
 
-    public void addRequest(RequestModel request) {
+    public void addRequest(RequestModel request, int stage) {
         for (RequestType type : RequestType.values()) {
-            int q = request.getRequest(type).getQuantity();
+            int q = request.getRequest(type, stage).getQuantity();
             if (q > 0) {
                 Request req = new Request(request.getCounty(), request.getCity(), request.getLatitude(), request.getLongitude(), q);
                 getRequests().get(type).add(req);

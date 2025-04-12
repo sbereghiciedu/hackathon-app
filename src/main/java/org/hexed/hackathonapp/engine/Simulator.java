@@ -18,6 +18,7 @@ public class Simulator implements Runnable {
     private final Logger logger;
     private final ExternalApiService api;
     private final Dispatcher dispatcher;
+    private int stage = 4;
 
     public Simulator(ExternalApiService api, Dispatcher dispatcher, Logger logger) {
         this.api = api;
@@ -25,8 +26,16 @@ public class Simulator implements Runnable {
         this.logger = logger;
     }
 
+    public int getStage() {
+        return stage;
+    }
+
+    public void setStage(int stage) {
+        this.stage = stage;
+    }
+
     protected void populateInterventionCentersV0(State state) {
-        for (RequestType type : RequestType.values()) {
+        for (RequestType type : RequestType.values(stage)) {
             state.getInterventionCenters().get(type).addAll(api.getInterventionCenters(type));
         }
     }
@@ -52,7 +61,7 @@ public class Simulator implements Runnable {
         for (RequestModel request : requests) {
             logger.info("Loading queue...");
             logger.info(request.toString());
-            state.addRequest(request);
+            state.addRequest(request, stage);
         }
 
         boolean stillPlaying = true;
@@ -66,7 +75,7 @@ public class Simulator implements Runnable {
                     req = api.getCallsNext();
                     logger.info("Loading next call...");
                     logger.info(req.toString());
-                    state.addRequest(req);
+                    state.addRequest(req, stage);
                 } catch (CallLimitException e) {
                     // TODO consider not requesting more calls unless we satisfied a request
                 } catch (NoMoreCallsException e) {
@@ -89,7 +98,9 @@ public class Simulator implements Runnable {
 
                     logger.info("Attempting dispatch of type {}", type.getKey());
                     logger.info(dispatch.toString());
-                    center.setQuantity(api.getInterventionCentersByCity(type, dispatch.getSourceCounty(), dispatch.getSourceCity()));
+                    if (stage >= 4) {
+                        center.setQuantity(api.getInterventionCentersByCity(type, dispatch.getSourceCounty(), dispatch.getSourceCity()));
+                    }
                     if (center.getQuantity() >= dispatch.getQuantity()) {
                         api.postDispatch(type, dispatch);
                         DispatchStore.getInstance().getDispatches().add(new TypedDispatchModel(dispatch, type.getKey()));

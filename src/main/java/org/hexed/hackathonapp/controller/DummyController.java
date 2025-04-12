@@ -30,15 +30,20 @@ public class DummyController {
         logger.info(status.toString());
 
         Simulator simulator = new Simulator(api, new DummyDispatcher(), logger);
+        simulator.setStage(4);
         simulator.run();
 
-        return "Done!";
+        logger.info("Stopping server");
+        status = api.postControlStop();
+        logger.info(status.toString());
+
+        return status.toString();
     }
 
     @GetMapping(value = "/2")
     public String test2() {
         ControlResponseModel controlStatus = api.getControlStatus();
-        ControlResponseModel controlResetStatus = api.postControlReset(new ResetParamsModel("dummyces", 1000, 100));
+        ControlResponseModel controlResetStatus = api.postControlReset(new ResetParamsModel("dummy", 100, 10));
 
         Simulator simulator = new Simulator(api, new MaxFlowMinCostDispatcher(), logger);
         simulator.run();
