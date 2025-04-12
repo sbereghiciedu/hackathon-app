@@ -1,6 +1,7 @@
 package org.hexed.hackathonapp.controller;
 
 import org.hexed.hackathonapp.engine.DummyDispatcher;
+import org.hexed.hackathonapp.engine.MaxFlowMinCostDispatcher;
 import org.hexed.hackathonapp.engine.Simulator;
 import org.hexed.hackathonapp.model.api.control.ControlResponseModel;
 import org.hexed.hackathonapp.model.api.control.ResetParamsModel;
@@ -29,6 +30,17 @@ public class DummyController {
         logger.info(status.toString());
 
         Simulator simulator = new Simulator(api, new DummyDispatcher(), logger);
+        simulator.run();
+
+        return "Done!";
+    }
+
+    @GetMapping(value = "/2")
+    public String test2() {
+        ControlResponseModel controlStatus = api.getControlStatus();
+        ControlResponseModel controlResetStatus = api.postControlReset(new ResetParamsModel("dummyces", 1000, 100));
+
+        Simulator simulator = new Simulator(api, new MaxFlowMinCostDispatcher(), logger);
         simulator.run();
 
         logger.info("Stopping server");
