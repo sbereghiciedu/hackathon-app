@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -24,8 +25,24 @@ public class DummyController {
     }
 
     @GetMapping
-    public String test() {
-        api.resetServer(new ResetParamsModel("bellalite", 10000, 10000), 1);
+    public String test(@RequestParam(defaultValue = "1") int rp, @RequestParam(defaultValue = "1") int version) {
+        /*
+        level: 1/2/3, seed: "revolutionrace", targetDispatches: 10000, maxActiveCalls: 100
+        level: 1/2/3, seed "jollyroom", targetDispatches: 100000, maxActiveCalls: 1000
+        level: 1/2/3, seed: "jaktia", targetDispatches: 10000, maxActiveCalls: 3
+        level: 1/2/3, seed: "bellalite", targetDispatches: 10000, maxActiveCalls: 10000
+        level 4/5, seed: "gudrun", targetDispatches: 25, maxActiveCalls: 5
+        */
+
+        ResetParamsModel requestParam = switch (rp) {
+            case 1 -> new ResetParamsModel("revolutionrace", 10000, 100);
+            case 2 -> new ResetParamsModel("jollyroom", 10000, 1000);
+            case 3 -> new ResetParamsModel("jaktia", 10000, 3);
+            case 4 -> new ResetParamsModel("bellalite", 10000, 10000);
+            case 5 -> new ResetParamsModel("gudrun", 25, 5);
+            default -> null;
+        };
+        api.resetServer(requestParam, version);
 
         Simulator simulator = new Simulator(api, new DummyDispatcher(), logger);
         simulator.run();
