@@ -55,9 +55,9 @@ public class Simulator implements Runnable {
                     System.out.println(req);
                     state.addRequest(req);
                 } catch (CallLimitException e) {
-                    // nothing to do, exit the loop smoothly
+                    // TODO consider not requesting more calls unless we satisfied a request
                 } catch (NoMoreCallsException e) {
-                    stillPlaying = false;
+                    // nothing to do, exit the loop smoothly
                 }
 
             } while (req != null);
