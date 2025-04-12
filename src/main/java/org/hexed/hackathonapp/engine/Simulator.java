@@ -6,6 +6,7 @@ import org.hexed.hackathonapp.model.api.exceptions.CallLimitException;
 import org.hexed.hackathonapp.model.api.exceptions.NoMoreCallsException;
 import org.hexed.hackathonapp.model.api.interventioncenter.DispatchModel;
 import org.hexed.hackathonapp.model.api.interventioncenter.InterventionCenterModel;
+import org.hexed.hackathonapp.model.api.interventioncenter.TypedDispatchModel;
 import org.hexed.hackathonapp.model.api.location.LocationModel;
 import org.hexed.hackathonapp.service.api.ExternalApiService;
 import org.slf4j.Logger;
@@ -91,7 +92,7 @@ public class Simulator implements Runnable {
                     center.setQuantity(api.getInterventionCentersByCity(type, dispatch.getSourceCounty(), dispatch.getSourceCity()));
                     if (center.getQuantity() >= dispatch.getQuantity()) {
                         api.postDispatch(type, dispatch);
-                        DispatchStore.getInstance().getDispatches().add(dispatch);
+                        DispatchStore.getInstance().getDispatches().add(new TypedDispatchModel(dispatch, type.getKey()));
                         request.setQ(request.getQ() - dispatch.getQuantity());
                         if (request.getQ() == 0) {
                             state.getRequests().get(type).remove(request);
